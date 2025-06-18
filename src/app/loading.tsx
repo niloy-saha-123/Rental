@@ -1,6 +1,10 @@
-// src/app/loading.tsx
-// You can optionally add "use client"; here if your loading component needs client-side interactivity
-// "use client";
+/**
+ * @file src/app/loading.tsx
+ * @description This special file defines a loading UI that Next.js automatically displays
+ * when a page or route segment is being loaded. It provides instant visual feedback to the user
+ * while data is being fetched or components are being rendered on the server,
+ * improving the perceived performance and user experience of the application.
+ */
 
 export default function Loading() {
   return (
