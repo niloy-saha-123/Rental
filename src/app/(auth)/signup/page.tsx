@@ -12,12 +12,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react'; // For auto-login after signup
 
-// Import your tRPC client (api) and Zod schema
+// Import the tRPC client (api) and Zod schema
 import { api } from '@/lib/trpc/client';
 import { signupSchema } from '@/lib/validators/authSchema';
 import { z } from 'zod'; // Zod for client-side validation
 
-// Assuming you have Input and Button components from shadcn/ui or your components/ui
+// Using draft Input and Button components from the components/ui
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
