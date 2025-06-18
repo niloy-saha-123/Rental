@@ -8,7 +8,7 @@
 // Core NextAuth library for handling authentication flows.
 import NextAuth from 'next-auth';
 
-// PrismaAdapter connects Auth.js to your database via Prisma ORM.
+// PrismaAdapter connects Auth.js to our database via Prisma ORM.
 import { PrismaAdapter } from '@auth/prisma-adapter';
 
 // Prisma client instance, allowing database interactions.
@@ -17,7 +17,8 @@ import { db } from '@/lib/db';
 // --- Authentication Providers ---
 // Each provider defines a method by which users can authenticate (e.g., email, Google, Facebook).
 
-// Email Provider: Enables passwordless login via email verification links. For later!
+// Email Provider: Enables passwordless login via email verification links.
+// For later!
 // import EmailProvider from 'next-auth/providers/email';
 
 // Google Provider: Enables authentication via Google OAuth.
@@ -26,6 +27,8 @@ import GoogleProvider from 'next-auth/providers/google';
 // Credentials Provider: Enables traditional email/password login.
 import CredentialsProvider from 'next-auth/providers/credentials';
 // Library for securely hashing and comparing passwords.
+// Because we are not storing passwords in plain text,
+// we use bcryptjs to hash passwords during signup and compare them during login.
 import { compare } from 'bcryptjs'; // For comparing passwords during login
 // Note: 'hash' is imported for clarity but will be used in a separate signup API route.
 // import { hash } from "bcryptjs";
