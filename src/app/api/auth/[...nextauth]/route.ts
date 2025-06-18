@@ -113,7 +113,7 @@ const handler = NextAuth({
       },
     }),
 
-    // Add other providers like FacebookProvider here if needed:
+    // Will add other providers like FacebookProvider here if needed:
     // FacebookProvider({
     //   clientId: process.env.FACEBOOK_CLIENT_ID as string,
     //   clientSecret: process.env.FACEBOOK_CLIENT_SECRET as string,
