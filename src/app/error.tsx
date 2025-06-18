@@ -1,5 +1,13 @@
-// src/app/error.tsx
-'use client'; // <-- Add this line first!
+/**
+ * @file src/app/error.tsx
+ * @description This special file acts as an Error Boundary for its parent route segment and its children.
+ * It is a client-side component that automatically catches unexpected runtime errors in rendering or
+ * data fetching within its scope. When an error occurs, it displays a fallback UI (defined here)
+ * to the user instead of crashing the application, providing a graceful error experience.
+ * It also allows for logging errors and attempting to reset the UI.
+ */
+
+'use client';
 
 // The rest of the boilerplate code for the Error component follows...
 import { useEffect } from 'react';
