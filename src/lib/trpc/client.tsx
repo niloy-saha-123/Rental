@@ -14,14 +14,14 @@ import React, { useState } from 'react';
 // Import the superjson transformer for client-side serialization/deserialization.
 import superjson from 'superjson';
 
-import { AppRouter } from '@/server/routers/_app'; // Import your AppRouter type
+import { AppRouter } from '@/server/routers/_app'; // Import the AppRouter type
 import { createTRPCReact } from '@trpc/react-query'; // Use createTRPCReact for App Router
 
 // Initialize tRPC client for React components.
 // This 'api' object will be used in your frontend components to make API calls.
 export const api = createTRPCReact<AppRouter>();
 
-// TRPCReactProvider component to wrap your application with tRPC and React Query contexts.
+// TRPCReactProvider component to wrap our application with tRPC and React Query contexts.
 // This makes the 'api' client and query caching available throughout your React component tree.
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
   // Use useState to ensure QueryClient and tRPC client are created only once.
@@ -29,13 +29,13 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const [trpcClient] = useState(() =>
     api.createClient({
       links: [
-        // httpBatchLink is recommended for performance, batching multiple requests into one.
+        // httpBatchLink is for performance, batching multiple requests into one.
         httpBatchLink({
           // The URL for your tRPC API endpoint.
           // For local development, a relative path is sufficient as it's on the same origin.
-          // In production, this would be an absolute URL (e.g., "https://yourdomain.com/api/trpc").
+          // In production, this would be an absolute URL (e.g., "https://mydomain.com/api/trpc").
           url: '/api/trpc',
-          // NEW: Explicitly add the transformer to match the server-side configuration.
+          // Explicitly add the transformer to match the server-side configuration.
           transformer: superjson,
         }),
       ],
