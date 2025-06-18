@@ -11,7 +11,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
-// Assuming you have Input and Button components from shadcn/ui or your components/ui
+// Using draft Input and Button components from the components/ui
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
@@ -34,7 +34,7 @@ export default function LoginPage() {
         redirect: false, // Prevent NextAuth from redirecting automatically
         email,
         password,
-        // callbackUrl: callbackUrl, // You can pass callbackUrl if you want Auth.js to handle redirect
+        // callbackUrl: callbackUrl, // We can pass callbackUrl if we want Auth.js to handle redirect
       });
 
       if (result?.error) {
