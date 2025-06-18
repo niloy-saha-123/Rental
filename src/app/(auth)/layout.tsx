@@ -12,9 +12,9 @@ export default function AuthLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // A simple section or div to wrap the children (your login/signup pages).
-    // You can add specific styling or components here later that are unique
-    // to your auth flows, e.g., centering the form or a background image.
+    // A simple section or div to wrap the children (our login/signup pages).
+    // We can add specific styling or components here later that are unique
+    // to our auth flows, e.g., centering the form or a background image.
     <section className='flex items-center justify-center min-h-screen bg-gray-100'>
       {children}
     </section>
