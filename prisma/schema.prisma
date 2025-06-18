@@ -1,15 +1,15 @@
 /**
  * @file prisma/schema.prisma
  * @description This file defines the entire database schema for the Gear Up Rentals application.
- * It uses Prisma's schema definition language (SDL) to describe your database models,
+ * It uses Prisma's schema definition language (SDL) to describe our database models,
  * their fields, relationships, and data types. This schema serves as the single source
- * of truth for your database structure and is used by Prisma ORM to generate a type-safe
- * client for interacting with your PostgreSQL database (hosted on Supabase).
+ * of truth for our database structure and is used by Prisma ORM to generate a type-safe
+ * client for interacting with our PostgreSQL database (hosted on Supabase).
  * It includes core application models (User, Gear, Booking, DateBlock)
  * as well as authentication-related models (Account, Session) required by Auth.js.
  */
 
- 
+
 // --- Core Configuration ---
 
 /// Defines the database connection and provider.
