@@ -5,12 +5,13 @@
  * a chosen password, name, birthday, and optionally a phone number.
  * It interacts with the backend tRPC `auth.signup` mutation and then
  * automatically logs the user in upon successful registration.
+ * This page also offers "Sign up with Google" for social registration.
  */
 'use client'; // This is a client component
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react'; // For auto-login after signup
+import { signIn } from 'next-auth/react'; // For auto-login after signup and social sign-in
 
 // Import the tRPC client (api) and Zod schema
 import { api } from '@/lib/trpc/client';
@@ -97,6 +98,24 @@ export default function SignUpPage() {
     }
   };
 
+  // Handle Google OAuth sign-in (Duplicate from login page for consistency)
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Let Auth.js handle the full OAuth flow including redirect.
+      // This will automatically create an account if the user is new.
+      await signIn('google', {
+        callbackUrl: '/', // Redirect to homepage after Google signup/login
+      });
+    } catch (err) {
+      console.error('Google Sign-in Error:', err);
+      setError('An unexpected error occurred during Google sign-in.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className='flex flex-col items-center justify-center min-h-[calc(100vh-128px)] p-4'>
       <div className='w-full max-w-md bg-white p-8 rounded-lg shadow-md'>
@@ -152,6 +171,17 @@ export default function SignUpPage() {
             {loading ? 'Signing up...' : 'Sign Up'}
           </Button>
         </form>
+
+        <div className='my-6 text-center text-gray-500'>OR</div>
+
+        {/* NEW: Google Sign-in Button for Signup Page */}
+        <Button
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className='w-full bg-blue-500 hover:bg-blue-600'
+        >
+          {loading ? 'Signing up...' : 'Sign up with Google'}
+        </Button>
 
         <p className='text-center text-sm mt-6'>
           Already have an account?{' '}

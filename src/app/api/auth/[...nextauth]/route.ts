@@ -7,6 +7,8 @@
 
 // Core NextAuth library for handling authentication flows.
 import NextAuth from 'next-auth';
+// Import AuthOptions type for explicit typing of the authentication configuration.
+import { AuthOptions } from 'next-auth'; // NEW: Import AuthOptions type
 
 // PrismaAdapter connects Auth.js to our database via Prisma ORM.
 import { PrismaAdapter } from '@auth/prisma-adapter';
@@ -15,11 +17,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { db } from '@/lib/db';
 
 // --- Authentication Providers ---
-// Each provider defines a method by which users can authenticate (e.g., email, Google, Facebook).
-
-// Email Provider: Enables passwordless login via email verification links.
-// For later!
-// import EmailProvider from 'next-auth/providers/email';
+// Each provider defines a method by which users can authenticate (e.g., Google, Facebook, Credentials).
 
 // Google Provider: Enables authentication via Google OAuth.
 import GoogleProvider from 'next-auth/providers/google';
@@ -30,15 +28,12 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 // Because we are not storing passwords in plain text,
 // we use bcryptjs to hash passwords during signup and compare them during login.
 import { compare } from 'bcryptjs'; // For comparing passwords during login
-// Note: 'hash' is imported for clarity but will be used in a separate signup API route.
-// import { hash } from "bcryptjs";
 
-// Will add facebook provider later
-
-// Main NextAuth handler configuration.
 // This object defines how authentication requests are processed,
 // what providers are enabled, and how user data is managed.
-const handler = NextAuth({
+// It is exported so it can be used by `getServerSession` in tRPC context and middleware.
+export const authOptions: AuthOptions = {
+  // NEW: Explicitly type authOptions as AuthOptions
   // 1. Adapter Configuration:
   // Specifies the database adapter for persisting user, account, and session data.
   // PrismaAdapter leverages your existing Prisma schema to manage Auth.js's required tables.
@@ -46,7 +41,7 @@ const handler = NextAuth({
 
   // 2. Providers Array:
   // A list of authentication methods available to your users.
-  // Each provider needs specific configuration (e.g., client IDs/secrets, email server details).
+  // Each provider needs specific configuration (e.g., client IDs/secrets).
   providers: [
     GoogleProvider({
       // Google OAuth Client ID and Client Secret, obtained from Google Cloud Console.
@@ -66,27 +61,26 @@ const handler = NextAuth({
         },
         password: { label: 'Password', type: 'password' },
         // These fields are only for the `authorize` function to define what it expects.
-        // Actual signup data (name, birthday) will be handled by a separate signup API.
+        // Actual signup data (name, birthday, etc.) will be handled by a separate tRPC signup API route.
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null; // Missing credentials
+          return null; // Missing credentials, authentication fails.
         }
 
         // 1. Find the user in your database by email.
         const user = await db.user.findUnique({
           where: { email: credentials.email },
+          // Include fields needed for session/token if not all are automatically returned
+          // select: { id: true, email: true, name: true, image: true, password: true, birthday: true, phoneNumber: true }
         });
 
-        // Define a type for the user object that explicitly includes the password field.
-        // This resolves the TypeScript error by informing TypeScript that 'user' will have 'password'.
+        // Define a type for the user object that explicitly includes the password field for comparison.
         type UserWithPassword = typeof user & { password?: string | null };
-
-        // Cast the fetched user object to the new type.
         const typedUser = user as UserWithPassword;
 
-        // 2. If user not found, authentication fails.
-        // Signup for new users with email/password will happen via a separate API route.
+        // 2. If user not found, authentication fails for this provider.
+        // New user sign-up with email/password is handled by the `auth.signup` tRPC mutation.
         if (!typedUser) {
           console.warn(
             `Credentials login attempt for non-existent user: ${credentials.email}`
@@ -94,7 +88,7 @@ const handler = NextAuth({
           return null;
         }
 
-        // 3. Compare the provided password with the stored hashed password.
+        // 3. Compare the provided password with the stored hashed password using bcryptjs.
         const isPasswordValid =
           typedUser.password &&
           (await compare(credentials.password, typedUser.password));
@@ -103,31 +97,29 @@ const handler = NextAuth({
           console.warn(
             `Invalid password attempt for user: ${credentials.email}`
           );
-          return null; // Invalid password
+          return null; // Invalid password, authentication fails.
         }
 
         // 4. If authentication is successful, return the user object.
+        // This object's properties will be used to populate the JWT and session.
         return {
           id: typedUser.id,
           email: typedUser.email,
-          name: typedUser.name, // Make sure name is stored during signup
+          name: typedUser.name,
           image: typedUser.image,
+          // Include additional fields from the User model to make them available in the session/JWT
+          birthday: typedUser.birthday,
+          phoneNumber: typedUser.phoneNumber,
         };
       },
     }),
-
-    // Will add other providers like FacebookProvider here if needed:
-    // FacebookProvider({
-    //   clientId: process.env.FACEBOOK_CLIENT_ID as string,
-    //   clientSecret: process.env.FACEBOOK_CLIENT_SECRET as string,
-    // }),
   ],
 
   // 3. Pages Configuration:
   // Custom URLs for Auth.js's internal pages (e.g., login, sign out, error).
   // This allows you to use your application's custom UI for these flows.
   pages: {
-    signIn: '/login', // Redirects to this page for all sign-in attempts.
+    signIn: '/login', // Redirects all sign-in attempts to your custom login page.
     // signOut: "/auth/signout", // Optional: Custom sign-out page.
     // error: "/auth/error",     // Optional: Custom error page (error code passed as query param).
     // newUser: "/onboarding",   // Optional: Redirects new users after their first sign-in.
@@ -136,7 +128,7 @@ const handler = NextAuth({
   // 4. Session Configuration:
   // Defines how user sessions are managed and stored.
   session: {
-    strategy: 'jwt', // Use JSON Web Tokens (JWT) for session management.
+    strategy: 'jwt', // Uses JSON Web Tokens (JWT) for session management.
     // JWT strategy is recommended for Next.js App Router and serverless environments.
     // It stores session data in a secure, signed, HTTP-only cookie.
     // maxAge: 30 * 24 * 60 * 60, // Optional: Session will last for 30 days (default).
@@ -144,37 +136,71 @@ const handler = NextAuth({
   },
 
   // 5. Callbacks:
-  // Functions that allow you to customize behavior or extend data when certain events occur.
+  // Functions that allow you to customize behavior or extend data within the authentication flow.
   callbacks: {
-    // Session callback: Executed whenever a session is checked or created.
-    // This is crucial for adding custom data (like the user's database ID) to the session object,
-    // making it accessible in client-side components and server-side tRPC procedures.
-    async session({ session, user, token }) {
+    /**
+     * @function jwt
+     * @description Executed whenever a JWT is created or updated. This is where you add
+     * custom properties from your user object (obtained during `authorize`) to the JWT token.
+     * The token is stored in the session cookie.
+     * @param {object} params - Parameters including `token`, `user`, `account`, `profile`, `isNewUser`.
+     * @returns {Promise<JWT>} The modified JWT token.
+     */
+    async jwt({ token, user }) {
+      if (user) {
+        // 'user' object is populated from the `authorize` function's return value.
+        // Add all desired properties from the user to the token for client-side access.
+        token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        token.image = user.image; // Assuming 'image' comes from Auth.js User object
+        // Add custom properties from your User model:
+        (token as any).birthday = (user as any).birthday;
+        (token as any).phoneNumber = (user as any).phoneNumber;
+      }
+      return token;
+    },
+
+    /**
+     * @function session
+     * @description Executed whenever a session is checked or created. This is crucial for
+     * exposing custom data from the JWT token to the client-side session object (via `useSession`).
+     * @param {object} params - Parameters including `session`, `user`, `token`.
+     * @returns {Promise<Session>} The modified session object.
+     */
+    async session({ session, token }) {
       if (session.user) {
-        // If JWT strategy is used, the user's ID is typically in `token.sub`.
-        // If database strategy is used, it's in `user.id`.
-        // We ensure 'id' is added to the session.user object for type safety.
-        (session.user as any).id = token?.sub || user?.id; // Asserting as 'any' to add custom property
+        // Populate the session.user object with properties from the JWT token.
+        // 'token.sub' is the standard JWT claim for subject (usually user ID).
+        session.user.id = token.sub || token.id; // Use token.id or token.sub (standard JWT claim)
+        session.user.email = token.email;
+        session.user.name = token.name;
+        session.user.image = token.picture; // 'picture' is standard JWT claim for image URL
+        // Assign custom properties from the token to the session user object.
+        (session.user as any).birthday = (token as any).birthday;
+        (session.user as any).phoneNumber = (token as any).phoneNumber;
       }
       return session;
     },
-    // Other callbacks (e.g., `signIn`, `redirect`, `jwt`) can be defined here if needed
-    // for more advanced customization of the authentication flow.
   },
 
   // 6. Secret:
   // A cryptographic secret string used to sign session cookies and JWTs.
-  // This value must be kept secret and should be a long, randomly generated string.
+  // This value must be kept absolutely secret and should be a long, randomly generated string.
   // It is essential for the security of your authentication system.
   secret: process.env.AUTH_SECRET,
 
   // 7. Debug Mode:
-  // Enables verbose logging for Auth.js, which is very helpful during development
+  // Enables verbose logging for Auth.js. Highly recommended during development
   // for understanding authentication flow and troubleshooting issues.
+  // Should be disabled in production.
   debug: process.env.NODE_ENV === 'development',
-});
+};
 
 // Export the NextAuth handler for both GET and POST HTTP methods.
 // Next.js App Router API routes require explicit exports for methods.
 // Auth.js uses both GET (e.g., for /api/auth/session) and POST (e.g., for /api/auth/signin).
-export { handler as GET, handler as POST };
+export default NextAuth(authOptions);
+
+// This re-export is necessary for Next.js App Router to correctly expose GET and POST methods.
+export const { GET, POST } = NextAuth(authOptions);

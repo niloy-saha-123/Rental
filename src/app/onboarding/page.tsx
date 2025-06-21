@@ -1,0 +1,187 @@
+/**
+ * @file src/app/onboarding/page.tsx
+ * @description This is a client-side page component for onboarding new users who signed up
+ * via social login (e.g., Google) and need to complete their profile with essential details
+ * like birthday and phone number. It displays pre-filled information and collects missing data,
+ * then updates the user's profile via tRPC.
+ */
+
+'use client'; // This is a client component
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react'; // To access user session
+import { api } from '@/lib/trpc/client'; // Your tRPC client
+import { z } from 'zod'; // For client-side validation
+// Assuming Input and Button components exist
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+
+export default function OnboardingPage() {
+  const router = useRouter();
+  const { data: session, status } = useSession(); // Get session data
+  const [formData, setFormData] = useState({
+    birthday: '',
+    phoneNumber: '',
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // tRPC mutation to update user profile
+  const updateProfileMutation = api.user.updateProfile.useMutation({
+    onSuccess: (data) => {
+      // If profile updated successfully, redirect to homepage
+      router.push('/');
+    },
+    onError: (err) => {
+      console.error('Profile Update Error:', err);
+      if (err.data?.zodError) {
+        setError(
+          Object.values(err.data.zodError.fieldErrors).flat().join('. ') ||
+            'Validation error.'
+        );
+      } else {
+        setError(err.message || 'Failed to update profile.');
+      }
+    },
+    onSettled: () => {
+      setLoading(false);
+    },
+  });
+
+  useEffect(() => {
+    // If user is not authenticated or not loaded, do nothing
+    if (status === 'loading') return;
+
+    // If user is not logged in, redirect to login page
+    if (!session || !session.user) {
+      router.push('/login');
+      return;
+    }
+
+    // Populate form if user has existing data (e.g., if they came back to this page)
+    if (session.user.birthday) {
+      // Format Date object to YYYY-MM-DD for input type="date"
+      const date = new Date(session.user.birthday);
+      const formattedDate = date.toISOString().split('T')[0];
+      setFormData((prev) => ({ ...prev, birthday: formattedDate }));
+    }
+    if (session.user.phoneNumber) {
+      setFormData((prev) => ({
+        ...prev,
+        phoneNumber: session.user.phoneNumber as string,
+      }));
+    }
+
+    // TODO: Add logic here to redirect if profile is already complete
+    // This depends on how you define "complete" (e.g., both birthday and phone number present)
+    // if (session.user.birthday && session.user.phoneNumber) {
+    //   router.push('/'); // Redirect if already complete
+    // }
+  }, [session, status, router]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Basic client-side validation using Zod (adjust schema as needed for this form)
+      const formSchema = z.object({
+        birthday: z
+          .string()
+          .min(1, 'Birthday is required.')
+          .pipe(z.coerce.date()),
+        phoneNumber: z
+          .string()
+          .min(10, 'Phone number is too short.')
+          .optional()
+          .nullable(),
+      });
+      formSchema.parse(formData);
+
+      await updateProfileMutation.mutateAsync({
+        birthday: formData.birthday,
+        phoneNumber: formData.phoneNumber || null, // Ensure null if empty string
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setError(err.errors.map((e) => e.message).join('. '));
+      } else {
+        setError('An unexpected error occurred during profile update.');
+      }
+      setLoading(false);
+    }
+  };
+
+  if (status === 'loading') {
+    return (
+      <div className='flex items-center justify-center min-h-[calc(100vh-128px)]'>
+        Loading session...
+      </div>
+    );
+  }
+
+  // Ensure session.user exists before trying to access its properties
+  if (!session || !session.user) {
+    // This case should be handled by useEffect redirect, but good for initial render.
+    return null;
+  }
+
+  return (
+    <div className='flex flex-col items-center justify-center min-h-[calc(100vh-128px)] p-4'>
+      <div className='w-full max-w-md bg-white p-8 rounded-lg shadow-md'>
+        <h1 className='text-2xl font-bold text-center mb-6'>
+          Complete Your Profile
+        </h1>
+        <p className='text-center text-gray-600 mb-4'>
+          Welcome, {session.user.name || session.user.email}! Please provide a
+          few more details.
+        </p>
+
+        {error && <p className='text-red-500 text-center mb-4'>{error}</p>}
+
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          {/* Display Name and Email (not editable on this form) */}
+          <Input
+            type='text'
+            value={session.user.name || ''}
+            readOnly
+            className='cursor-not-allowed bg-gray-50'
+            placeholder='Name'
+          />
+          <Input
+            type='email'
+            value={session.user.email || ''}
+            readOnly
+            className='cursor-not-allowed bg-gray-50'
+            placeholder='Email'
+          />
+
+          <Input
+            name='birthday'
+            type='date'
+            placeholder='Birthday'
+            value={formData.birthday}
+            onChange={handleChange}
+            required
+          />
+          <Input
+            name='phoneNumber'
+            type='tel'
+            placeholder='Phone Number (Optional)'
+            value={formData.phoneNumber}
+            onChange={handleChange}
+          />
+          <Button type='submit' disabled={loading} className='w-full'>
+            {loading ? 'Saving...' : 'Complete Profile'}
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+}

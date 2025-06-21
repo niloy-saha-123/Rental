@@ -6,37 +6,46 @@
  * This acts as the foundation for all your tRPC API endpoints, ensuring consistent setup
  * and error handling across the backend.
  */
+
 // Importing necessary utilities from @trpc/server
-import { initTRPC } from '@trpc/server';
+import { initTRPC, TRPCError } from '@trpc/server'; // Import TRPCError for error handling in procedures
 // Import FetchCreateContextFnOptions for context creation in fetch handlers.
 import { type FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
-import superjson from 'superjson'; // For proper serialization of dates, etc.
-import { ZodError } from 'zod'; // For structured error handling with Zod
+import superjson from 'superjson'; // For proper serialization of dates, etc., between client and server
+import { ZodError } from 'zod'; // For structured validation error handling from Zod schemas
+// Import getServerSession to obtain the Auth.js session object from the request.
+import { getServerSession } from 'next-auth';
+// Import your Auth.js options, which define your authentication configuration.
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'; // Adjust path if needed
 
 // --- Context Setup (createContext) ---
-// This function creates the tRPC context for each request.
-// It is now typed with `FetchCreateContextFnOptions` to be compatible with `fetchRequestHandler`.
+/**
+ * @function createContext
+ * @description This asynchronous function creates the tRPC context for each incoming API request.
+ * The context is a crucial object that is passed down to all tRPC procedures, making resources
+ * like the database client, current user session, or request/response objects available.
+ * @param {FetchCreateContextFnOptions} opts - Options provided by the tRPC fetch adapter, including the request object.
+ * @returns {Promise<object>} An object containing the request and the user's session.
+ */
 export const createContext = async (opts: FetchCreateContextFnOptions) => {
-  // Access the standard Web Request object from `opts.req`.
-  // You would typically get the user's session here.
-  // For now, we're returning an empty object, but later you'd integrate Auth.js session.
-  // Example: const session = await getServerSession(authOptions);
+  // Obtain the Auth.js session for the current request.
+  // getServerSession reads the session cookie and validates the user's session.
+  const session = await getServerSession(authOptions); // Pass authOptions here for session retrieval
+
   return {
-    // db, // If you want to access Prisma client directly in context (optional, can import in procedures)
-    // session, // User session information
-    req: opts.req, // Pass the request object
-    // Note: 'res' is not directly available in FetchCreateContextFnOptions
-    // as it's a Node.js-specific concept not part of the standard Web Fetch API.
+    req: opts.req, // The standard Web Request object for the current API call.
+    session, // The user's authentication session, or null if not authenticated.
   };
 };
 
 // --- tRPC Initialization ---
-// `initTRPC` creates the tRPC instance.
-// It takes generic types for the context and a configuration object.
+// `initTRPC` creates the tRPC instance, binding the context and defining global configurations.
 const t = initTRPC.context<typeof createContext>().create({
-  // Use superjson for efficient and safe serialization of data, especially dates.
+  // `transformer`: Uses SuperJSON for efficient and safe serialization/deserialization of data types
+  // (like Dates, BigInts, etc.) between the client and server.
   transformer: superjson,
-  // Define custom error formatting, especially useful with Zod.
+  // `errorFormatter`: Customizes how errors are structured when sent back to the client.
+  // It specifically flattens Zod validation errors for easier handling on the frontend.
   errorFormatter({ shape, error }) {
     return {
       ...shape,
@@ -52,40 +61,48 @@ const t = initTRPC.context<typeof createContext>().create({
 });
 
 // --- Procedure Definitions ---
-// These are reusable tRPC procedures.
+// These are reusable tRPC procedure builders, enforcing specific authentication/authorization policies.
 
-// `router` creates a new tRPC router. All your API procedures will be defined within a router.
+/**
+ * @constant router
+ * @description A utility to create new tRPC routers. All your API procedures for a specific domain
+ * (e.g., auth, gear, user) will be defined within an instance of this router.
+ */
 export const router = t.router;
 
-// `publicProcedure` is a base procedure that doesn't enforce any authentication or authorization.
-// It's used for endpoints accessible to anyone (e.g., signup, public data).
+/**
+ * @constant publicProcedure
+ * @description A base tRPC procedure that does not enforce any authentication or authorization.
+ * It is used for API endpoints that are accessible to anyone, regardless of their login status
+ * (e.g., user signup, fetching public gear listings).
+ */
 export const publicProcedure = t.procedure;
 
-// `protectedProcedure` is a base procedure that only authenticated users can access.
-// You would add authorization logic here (e.g., checking if `session.user` exists).
-// For now, it's public, but you'd modify it later to check authentication.
-export const protectedProcedure = t.procedure; // TODO: Implement authentication check here later
-// Example for protectedProcedure (requires Auth.js session integration):
-/*
-import { TRPCError } from '@trpc/server';
-import { getServerSession } from 'next-auth'; // You'll need to define your auth options
-
+/**
+ * @constant protectedProcedure
+ * @description A base tRPC procedure that explicitly requires the user to be authenticated.
+ * It uses a middleware to check for a valid session. If no valid session is found, it throws
+ * an `UNAUTHORIZED` error, preventing access to the procedure's logic.
+ */
 export const protectedProcedure = t.procedure.use(
   t.middleware(async ({ ctx, next }) => {
-    // You would fetch and check the session here.
-    // This is a placeholder; real implementation depends on your Auth.js setup.
-    // const session = await getServerSession(ctx.req, ctx.res, authOptions); // Note: ctx.res not available here
+    // Check if a session exists in the context and if the user object is present within that session.
+    // The session object is populated in the `createContext` function.
+    if (!ctx.session || !ctx.session.user) {
+      // If no valid session, throw an unauthorized error.
+      // This error will be caught by tRPC's error handler and sent to the client.
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Not authenticated.',
+      });
+    }
 
-    // if (!session || !session.user) {
-    //   throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Not authenticated' });
-    // }
-
+    // If authenticated, proceed to the next middleware or the procedure's main logic.
+    // The session is explicitly passed into the context for subsequent steps, aiding type inference.
     return next({
-      // ctx: {
-      //   // Infers the `session` as part of the tRPC context
-      //   session,
-      // },
+      ctx: {
+        session: ctx.session, // Makes the session directly available as ctx.session in the procedure
+      },
     });
   })
 );
-*/
