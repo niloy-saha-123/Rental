@@ -1,0 +1,195 @@
+/**
+ * @file prisma/schema.prisma
+ * @description This file defines the entire database schema for the Gear Up Rentals application.
+ * It uses Prisma's schema definition language (SDL) to describe our database models,
+ * their fields, relationships, and data types. This schema serves as the single source
+ * of truth for our database structure and is used by Prisma ORM to generate a type-safe
+ * client for interacting with our PostgreSQL database (hosted on Supabase).
+ * It includes core application models (User, Gear, Booking, DateBlock)
+ * as well as authentication-related models (Account, Session) required by Auth.js.
+ */
+
+
+// --- Core Configuration ---
+
+/// Defines the database connection and provider.
+/// The URL is sourced from environment variables for security.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Important for migrations
+}
+
+/// Specifies that the Prisma Client should be generated for TypeScript/JavaScript.
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+// --- Enumerations ---
+
+/// Defines the lifecycle status of a rental booking.
+enum BookingStatus {
+  /// The initial state after a renter requests to book an item, awaiting owner approval.
+  PENDING
+  /// The owner has approved the booking, and it is scheduled for the future.
+  CONFIRMED
+  /// The rental period is currently in progress.
+  ACTIVE
+  /// The rental has been successfully completed and the item returned.
+  COMPLETED
+  /// The booking was cancelled by either the renter or the owner before it became active.
+  CANCELLED
+}
+
+
+// --- Authentication Models (Required by Auth.js) ---
+
+/// Represents a user's account with a specific OAuth provider (e.g., Google, GitHub).
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  /// The user this account belongs to.
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+/// Represents an active session for a logged-in user.
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  
+  /// The user this session belongs to.
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Used for passwordless email sign-in flows to store one-time tokens. 
+/// This is typically used for magic links sent to users' email addresses.
+/// Removing this for now since we are not implementing email magic links in the first phase.
+//
+//model VerificationToken {
+//  identifier String
+//  token      String   @unique
+//  expires    DateTime
+//
+//  @@unique([identifier, token])
+//}
+
+
+// --- Application-Specific Models ---
+
+/// Represents a registered user of the platform.
+/// Represents a registered user of the platform.
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+
+  // Field to store the HASHED password for traditional email/password logins.
+  // It's optional (`String?`) to allow users who sign up via Google
+  // not to have a password stored here. They can set one later or never.
+  password      String?
+
+  // New: User's birthday, collected during signup for age verification or personalization.
+  birthday      DateTime?
+
+  // New: User's phone number, for communication or SMS verification.
+  // This is added for schema consistency now, but the SMS verification flow
+  // will be implemented in a later phase (e.g., using Twilio).
+  phoneNumber   String?   @unique
+
+  // Timestamp of when the user record was created. Automatically set by Prisma.
+  createdAt     DateTime  @default(now())
+  // Timestamp of when the user record was last updated. Automatically updated by Prisma.
+  updatedAt     DateTime  @updatedAt
+  
+  /// OAuth accounts linked to this user.s
+  accounts      Account[]
+  /// Active sessions for this user.
+  sessions      Session[]
+  
+  /// Gear items listed for rent by this user.
+  ownedGear     Gear[]    @relation("OwnerOfGear")
+  /// Bookings made by this user as a renter.
+  rentedBookings Booking[] @relation("RentedBy")
+}
+
+/// Represents a piece of equipment listed for rent by a user (an Owner).
+model Gear {
+  id            String      @id @default(cuid())
+  name          String
+  description   String
+  pricePerDay   Float
+  /// Master on/off switch for a gear listing, controlled by the owner.
+  isAvailable   Boolean     @default(true)
+  /// Mandatory buffer period (in days) between bookings for inspection and cleaning.
+  turnoverDays  Int         @default(1)
+
+  /// The ID of the user who owns this gear.
+  ownerId       String
+  /// The user who owns this gear.
+  owner         User        @relation("OwnerOfGear", fields: [ownerId], references: [id])
+  
+  /// All bookings associated with this piece of gear.
+  bookings      Booking[]
+  /// All manual date blocks set by the owner for this gear.
+  dateBlocks    DateBlock[]
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+/// Represents a single rental booking of a piece of gear by a user (a Renter).
+model Booking {
+  id            String        @id @default(cuid())
+  startDate     DateTime
+  endDate       DateTime
+  totalCost     Float
+  /// The current status of the booking in its lifecycle.
+  status        BookingStatus @default(PENDING)
+
+  /// The ID of the gear item being booked.
+  gearId        String
+  /// The gear item being booked.
+  gear          Gear          @relation(fields: [gearId], references: [id])
+  
+  /// The ID of the user who is renting the gear.
+  renterId      String
+  /// The user who is renting the gear.
+  renter        User          @relation("RentedBy", fields: [renterId], references: [id])
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+/// Represents a date range manually blocked by an owner for a specific piece of gear.
+model DateBlock {
+  id        String   @id @default(cuid())
+  startDate DateTime
+  endDate   DateTime
+  /// An optional note from the owner explaining why the dates are blocked (e.g., "Maintenance").
+  reason    String?
+
+  /// The ID of the gear this block applies to.
+  gearId    String
+  /// The gear this block applies to.
+  gear      Gear     @relation(fields: [gearId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
