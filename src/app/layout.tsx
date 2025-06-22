@@ -1,4 +1,4 @@
-import '@/app/globals.css';
+import '@/app/global.css';
 import Header from '../components/layout/Header';
 
 // Import Google fonts
