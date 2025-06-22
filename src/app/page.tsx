@@ -2,70 +2,23 @@
 "use client";
 
 import React, { useState } from 'react';
+import SearchBar from '@/components/common/Searchbar'; // Import your new SearchBar component (adjusted path)
+
 
 export default function Home() {
-  const [location, setLocation] = useState("Current Location");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-
+  
   return (
     // Replaced inline style with Tailwind classes for padding, display, flex-direction, min-height, font and background
     <main className="p-8 flex flex-col items-center min-h-[calc(100vh-120px)] font-sans bg-gray-50">
 
-      {/* Large "Dhar" heading REMOVED as discussed */}
+     {/* The SearchBar component, which is now fixed at the top*/}
+     <SearchBar/>
 
-      {/* 4 Horizontal Expandable Boxes */}
-      {/* Replaced inline styles with Tailwind classes for layout, gap, width, wrap, margin */}
-      <div className="flex justify-center gap-4 w-full max-w-5xl flex-wrap mt-8 mb-12">
-        {/* Location Box */}
-        {/* Replaced inline styles with Tailwind classes for border, padding, rounded, flex, min-width, shadow, background */}
-        <div className="border border-gray-300 p-4 rounded-lg flex-1 min-w-[150px] shadow-md bg-white">
-          <h3 className="font-serif text-lg mb-2 text-gray-800">Location</h3> {/* Added font-serif, text-color */}
-          <input
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Enter location"
-            // Replaced inline input styles with Tailwind classes for width, padding, border, rounded, focus styles
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 font-sans"
-          />
-        </div>
+     {/* Spacer div to push main content down, considering fixed search bar height */}
+      {/* Adjust pt-xxl based on the actual height of your search bar + desired spacing */}
+      <div className="pt-44 sm:pt-48 md:pt-52"></div> {/* Placeholder for adequate spacing */}
 
-        {/* Search Bar Box */}
-        <div className="border border-gray-300 p-4 rounded-lg flex-1 min-w-[150px] shadow-md bg-white">
-          <h3 className="font-serif text-lg mb-2 text-gray-800">Search Object</h3>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for objects..."
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 font-sans"
-          />
-        </div>
-
-        {/* From Date Box */}
-        <div className="border border-gray-300 p-4 rounded-lg flex-1 min-w-[120px] shadow-md bg-white">
-          <h3 className="font-serif text-lg mb-2 text-gray-800">From</h3>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 font-sans"
-          />
-        </div>
-
-        {/* To Date Box */}
-        <div className="border border-gray-300 p-4 rounded-lg flex-1 min-w-[120px] shadow-md bg-white">
-          <h3 className="font-serif text-lg mb-2 text-gray-800">To</h3>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 font-sans"
-          />
-        </div>
-      </div>
+     
 
       {/* Placeholder for Populated Objects */}
       <section className="mt-12 w-full max-w-6xl"> {/* Replaced inline styles with Tailwind classes */}
