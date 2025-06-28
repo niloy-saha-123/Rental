@@ -1,7 +1,7 @@
-const {fontFamily} = require('tailwindcss/defaultTheme')
+const { fontFamily } = require('tailwindcss/defaultTheme')
 
-//*@type {import('tailwindcss')}.config}*/
-module.exports= {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
     //These paths tell Tailwind Css where to look fo your classes
     content: [
         './src/pages/**/*.{js,ts,jsx,tsx,mdx}', // If you use Pages Router

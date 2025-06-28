@@ -1,5 +1,7 @@
 import '@/app/global.css';
 import Header from '../components/layout/Header';
+import Providers from './providers';
+
 
 // Import Google fonts
 import { Inter, Playfair_Display } from 'next/font/google';
@@ -22,21 +24,15 @@ export const metadata = {
   description: 'Rent anything you need, lend anything you own.',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang='en'>
       <body>
-        <Header /> {/* Header component */}
-        {children} {/*This is where the page.tsx content gets rendered */}
-        <footer className='p-4 bg-gray-100 text-center text-gray-700'>
-          {' '}
-          {/* Replaced inline style with Tailwind classes */}
-          Your Footer Content Here
-        </footer>
+        <Header />
+        <Providers>
+          {children}
+        </Providers>
+        <footer>...</footer>
       </body>
     </html>
   );

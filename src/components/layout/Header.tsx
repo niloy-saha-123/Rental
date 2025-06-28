@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -53,17 +54,19 @@ export default function Header() {
         </svg>
         <span className="font-bold text-xl">Rental</span>
       </a>
-
-     
-
-      {/* Top Rig#ht - Hamburger Button */}
-      <button
-        ref={buttonRef}
-        onClick={toggleMenu}
-        className="bg-white text-gray-800 w-10 h-10 rounded-full shadow-md flex items-center justify-center cursor-pointer focus:outline-none ml-auto hover:bg-gray-100 transition-colors"
-      >
-        &#9776;
-      </button>
+      {/* Group Lend an Item button and Hamburger in a flex container on the right */}
+      <div className="flex items-center gap-2 ml-auto">
+        <Link href="/lend" className="mr-4 px-4 py-2 bg-white text-gray-800 rounded-full shadow-md hover:bg-gray-100 transition-colors flex items-center justify-center font-sans text-sm">
+          Lend an Item
+        </Link>
+        <button
+          ref={buttonRef}
+          onClick={toggleMenu}
+          className="bg-white text-gray-800 w-10 h-10 rounded-full shadow-md flex items-center justify-center cursor-pointer focus:outline-none hover:bg-gray-100 transition-colors"
+        >
+          &#9776;
+        </button>
+      </div>
 
       {/* Dropdown Menu */}
       {isMenuOpen && (
@@ -101,9 +104,9 @@ export default function Header() {
               </a>
             </li>
             <li className="p-3 border-b border-gray-300 last:border-b-0">
-              <a href="/lend" className="text-gray-800 no-underline block  hover:text-purple-600 transition-colors">
-                Become a lender
-              </a>
+              <Link href="/lend" className="text-gray-800 no-underline block hover:text-purple-600 transition-colors">
+                Lend an item
+              </Link>
             </li>
             <li className="p-3">
               <a href="/change-distance" className="text-gray-800 no-underline block  hover:text-purple-600 transition-colors">
