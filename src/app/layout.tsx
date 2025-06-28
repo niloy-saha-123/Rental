@@ -43,18 +43,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang='en' className={`${inter.variable} ${playfair.variable}`}>
-      {' '}
-      {/* Apply font variables to html tag */}
-      <body>
-        {' '}
-        {/* Body of the HTML. */}
+      <body suppressHydrationWarning={true}>
         {/* Wrap the main content with the Providers Client Component */}
         {/* This establishes the client-server boundary correctly for context providers */}
         <Providers>
-          {' '}
           {/* Wraps the entire application with client-side context providers. */}
           <Header /> {/* Header component, now active. */}
-          <main>{children}</main>{' '}
+          <main>{children}</main>
           {/* Main content area, renders page.tsx content. */}
           <footer className='p-4 bg-gray-100 text-center text-gray-700'>
             Your Footer Content Here {/* Footer content, now active. */}

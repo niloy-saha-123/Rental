@@ -1,11 +1,13 @@
-// src/components/ui/Input.tsx
+/**
+ * @file src/components/ui/Input.tsx
+ * @description A reusable React Input component adhering to Shadcn UI's styling principles.
+ * It provides consistent styling for various input types and is a foundational form element.
+ */
 'use client'; // UI components are typically client components
 
 import * as React from 'react';
-// You would typically import cn from shadcn/ui utils here
-// import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils'; // Assuming cn utility is from src/lib/utils.ts
 
-// Minimal Input component for now
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 
@@ -14,7 +16,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <input
         type={type}
-        className={`flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className || ''}`}
+        className={cn(
+          'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+          className
+        )}
         ref={ref}
         {...props}
       />
