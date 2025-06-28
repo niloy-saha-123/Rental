@@ -14,42 +14,8 @@ import { useState } from 'react';
 // Using Input and Button components from components/ui (now possibly Shadcn's versions)
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-
-// Define the Google SVG icon directly here (or import from a central icon file)
-const GoogleIcon = () => (
-  <svg
-    width='24'
-    height='24'
-    viewBox='0 0 24 24'
-    fill='none'
-    xmlns='http://www.w3.org/2000/svg'
-  >
-    <path
-      d='M12.0003 4.40997C14.0893 4.40997 15.7763 5.16997 17.0503 6.39997L20.5003 2.95997C18.3973 0.949973 15.4853 0 12.0003 0C7.27933 0 3.19933 2.61997 1.02033 6.60997L5.00033 9.73997C5.90333 7.02997 8.71833 4.40997 12.0003 4.40997Z'
-      fill='#EA4335'
-    />
-    <path
-      d='M23.9999 12.16H23.5189L23.4909 12.443L23.9999 12.16Z'
-      fill='#4285F4'
-    />
-    <path
-      d='M23.9999 12C23.9999 11.7371 23.9806 11.478 23.9559 11.221L12.0001 11.219L12.0001 15.986L18.7311 15.986C18.423 17.9622 17.2144 19.5772 15.5392 20.672L19.5692 23.792C21.8492 21.672 23.9999 18.232 23.9999 12Z'
-      fill='#4285F4'
-    />
-    <path
-      d='M12.0003 24.0001C15.4853 24.0001 18.3973 23.0501 20.5003 21.0401L17.0503 17.5901C15.7763 18.8201 14.0893 19.5801 12.0003 19.5801C8.71833 19.5801 5.90333 16.9601 5.00033 14.2501L1.02033 17.3801C3.19933 21.3701 7.27933 24.0001 12.0003 24.0001Z'
-      fill='#34A853'
-    />
-    <path
-      d='M5.00033 14.25L1.02033 17.38C1.40133 18.107 1.83633 18.805 2.30833 19.467L6.40133 16.337C6.18333 15.698 6.00033 14.992 5.90333 14.25H5.00033Z'
-      fill='#FBBD00'
-    />
-    <path
-      d='M23.9559 11.221H23.9999V12H23.5189L23.4909 11.221H23.9559Z'
-      fill='#FBBD00'
-    />
-  </svg>
-);
+// Importing the GoogleButton component from the icons folder
+import GoogleButton from '@/components/icons/GoogleIcon'; // Changed from GoogleIcon to GoogleButton
 
 export default function LoginPage() {
   const router = useRouter();
@@ -134,15 +100,13 @@ export default function LoginPage() {
           </Button>
         </div>
         <div className='my-6 text-center text-gray-500'>OR</div>
-        <Button
-          onClick={handleGoogleSignIn}
-          disabled={loading}
-          icon={<GoogleIcon />}
-          variant='outline' // Use outline variant for social buttons
-          className='w-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-md' // Styled for Google
-        >
-          {loading ? 'Signing in...' : 'Sign in with Google'}
-        </Button>
+        {/* Updated: Use the custom GoogleButton component directly */}
+        <GoogleButton
+          type='signin' // Specify 'signin' type for the button
+          onClick={handleGoogleSignIn} // Attach the Google sign-in handler
+          disabled={loading} // Disable button during loading
+          className='rounded-full overflow-hidden' // Ensure button itself is pill-shaped if SVG is pill-shaped
+        />
         <p className='text-center text-sm mt-6'>
           Don't have an account?{' '}
           <button

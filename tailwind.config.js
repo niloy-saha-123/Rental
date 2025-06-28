@@ -1,18 +1,25 @@
-// tailwind.config.js
+/**
+ * @file tailwind.config.js
+ * @description This file serves as the central configuration for Tailwind CSS in our project.
+ * It's where we customize Tailwind's default behavior, extend its theme with our branding (colors, fonts,
+ * spacing, etc.), and define plugins. This configuration is crucial for ensuring that Tailwind generates
+ * the correct utility classes and styles based on our project's specific design system.
+ */
+
 const { fontFamily } = require('tailwindcss/defaultTheme'); // Imports default theme to extend fonts.
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  // These paths tell Tailwind CSS where to look for your classes
+  // These paths tell Tailwind CSS where to look for our classes
   content: [
-    './pages/**/*.{js,ts,jsx,tsx,mdx}', // If you use Pages Router
+    './pages/**/*.{js,ts,jsx,tsx,mdx}', // For Pages Router
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}', // For App Router
-    './src/**/*.{js,ts,jsx,tsx,mdx}', // Ensure src directory is included
+    './src/**/*.{js,ts,jsx,tsx,mdx}', // For src directory
   ],
   theme: {
     extend: {
-      // Your friend's additions for background images.
+      // For background images.
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
@@ -20,7 +27,7 @@ module.exports = {
       },
       // --- Shadcn UI Color & Border Configuration ---
       // This maps Tailwind's color names to the CSS variables defined in globals.css.
-      // This is crucial for Shadcn UI components to be styled correctly.
+      // This is used for Shadcn UI components to be styled correctly.
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
@@ -55,13 +62,13 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // --- Your Custom Purple Theme Colors (override default primary) ---
-        // These are the direct HSL values for your purple shades.
+        // --- Custom Purple Theme Colors (override default primary) ---
+        // These are the direct HSL values for our purple shades.
         // Make sure these match the --primary HSL values in globals.css for consistency if desired.
-        // For now, these direct hex codes will be used.
+        // For now, these direct hex codes will be used. (TODO: change to HSL)
         'my-primary': {
           // Renamed to 'my-primary' to avoid conflict with Shadcn's primary
-          DEFAULT: '#766be0', // Your main purple/indigo color
+          DEFAULT: '#766be0', // Our main purple/indigo color
           light: '#9e99eb', // A lighter shade for backgrounds or subtle accents
           dark: '#5c52b3', // A darker shade for hover states or deeper accents
         },
