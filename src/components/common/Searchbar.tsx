@@ -46,118 +46,89 @@ const LocationIcon = () => (
 
 // --- Elegant, Responsive Search Bar with Collapse ---
 export default function SearchBar() {
-  // States for input values (same as before)
-  const [location, setLocation] = useState("Current Location");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-
-  // New states for autocomplete
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-
-  // Refs
-  const searchBarRef = useRef<HTMLDivElement>(null);
-  const locationInputRef = useRef<HTMLInputElement>(null);
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
-
-  // New states for collapse
+  const [searchQuery, setSearchQuery] = useState('');
+  const [location, setLocation] = useState('Current Location');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  const searchBarRef = useRef<HTMLDivElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+
+  // Fix hydration issue by ensuring client-side rendering
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Initialize Google Places API
   useEffect(() => {
     const initGooglePlaces = async () => {
-      const loader = new Loader({
-        apiKey: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || '',
-        version: 'weekly',
-        libraries: ['places']
-      });
+      if (typeof window !== 'undefined' && window.google) {
+        // Google Places API is already loaded
+        return;
+      }
 
       try {
+        // Load Google Places API
+        const loader = new Loader({
+          apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+          version: 'weekly',
+          libraries: ['places'],
+        });
+
         await loader.load();
-        autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
-        // Create a dummy div for PlacesService (required by Google API)
-        const dummyDiv = document.createElement('div');
-        placesServiceRef.current = new google.maps.places.PlacesService(dummyDiv);
+        console.log('Google Places API loaded successfully');
       } catch (error) {
-        console.error('Failed to load Google Places API:', error);
+        console.error('Error loading Google Places API:', error);
       }
     };
 
-    if (process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY) {
-      initGooglePlaces();
-    }
+    initGooglePlaces();
   }, []);
 
-  // Auto-detect user location on mount
-  useEffect(() => {
-    if (location === "Current Location" && typeof window !== 'undefined' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        try {
-          // Use OpenStreetMap Nominatim for free reverse geocoding
-          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-          const data = await response.json();
-          // Try to get city, state, country in a nice format
-          const address = data.address;
-          const city = address.city || address.town || address.village || address.hamlet || '';
-          const state = address.state || '';
-          const country = address.country || '';
-          const formatted = [city, state, country].filter(Boolean).join(', ');
-          if (formatted) setLocation(formatted);
-        } catch (err) {
-          // If geocoding fails, do nothing (keep placeholder)
-        }
-      }, (err) => {
-        // If user denies location, do nothing
-      });
-    }
-  }, [location]);
-
-  // Handle location input changes and fetch suggestions
+  // Handle location change with autocomplete
   const handleLocationChange = (value: string) => {
     setLocation(value);
-    
-    if (value.length > 2 && autocompleteServiceRef.current) {
+    setShowSuggestions(value.length > 0);
+
+    if (value.length > 0 && typeof window !== 'undefined' && window.google) {
       setIsLoadingSuggestions(true);
       
-      autocompleteServiceRef.current.getPlacePredictions(
+      const service = new window.google.maps.places.AutocompleteService();
+      service.getPlacePredictions(
         {
           input: value,
-          types: ['(cities)'], // Only cities
+          types: ['(cities)'],
         },
-        (predictions: google.maps.places.AutocompletePrediction[] | null, status: google.maps.places.PlacesServiceStatus) => {
+        (predictions, status) => {
           setIsLoadingSuggestions(false);
-          if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-            const suggestionTexts = predictions.map((prediction: google.maps.places.AutocompletePrediction) => prediction.description);
-            setSuggestions(suggestionTexts);
-            setShowSuggestions(true);
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+            setSuggestions(predictions.map(prediction => prediction.description));
           } else {
             setSuggestions([]);
-            setShowSuggestions(false);
           }
         }
       );
     } else {
       setSuggestions([]);
-      setShowSuggestions(false);
     }
   };
 
-  // Handle suggestion selection
+  // Handle suggestion click
   const handleSuggestionClick = (suggestion: string) => {
     setLocation(suggestion);
     setShowSuggestions(false);
-    setSuggestions([]);
   };
 
-  // Close suggestions when clicking outside
+  // Handle click outside to close suggestions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (locationInputRef.current && !locationInputRef.current.contains(event.target as Node)) {
+      if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
       }
     };
@@ -180,6 +151,33 @@ export default function SearchBar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Show a loading state while mounting to prevent hydration mismatch
+  if (!isMounted) {
+    return (
+      <div className="fixed top-[64px] left-1/2 -translate-x-1/2 w-full max-w-4xl px-8 py-6 bg-white rounded-3xl shadow-2xl border border-gray-200 z-40">
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="flex-1 min-w-0 w-full">
+            <div className="h-6 bg-gray-200 rounded mb-2"></div>
+            <div className="h-12 bg-gray-200 rounded-xl"></div>
+          </div>
+          <div className="flex-1 min-w-0 w-full">
+            <div className="h-6 bg-gray-200 rounded mb-2"></div>
+            <div className="h-12 bg-gray-200 rounded-xl"></div>
+          </div>
+          <div className="flex-1 min-w-0 w-full">
+            <div className="h-6 bg-gray-200 rounded mb-2"></div>
+            <div className="h-12 bg-gray-200 rounded-xl"></div>
+          </div>
+          <div className="flex-1 min-w-0 w-full">
+            <div className="h-6 bg-gray-200 rounded mb-2"></div>
+            <div className="h-12 bg-gray-200 rounded-xl"></div>
+          </div>
+          <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
+        </div>
+      </div>
+    );
+  }
 
   // --- Big, Elegant Bar ---
   const bigContainerClasses = `

@@ -9,7 +9,7 @@
 
 import type { Metadata } from 'next'; // Imports Metadata type for SEO.
 import { Inter, Playfair_Display } from 'next/font/google'; // Import fonts, including Playfair_Display.
-import '@/app/globals.css'; // Imports global CSS styles using absolute path.
+import '@/app/global.css'; // Imports global CSS styles using absolute path.
 import Header from '@/components/layout/Header'; // Imports Header component using absolute path.
 
 // Import the Providers Client Component

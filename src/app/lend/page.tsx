@@ -12,19 +12,54 @@
  * - Responsive design with Tailwind CSS
  * - Form state management with React hooks
  * - Client-side form submission handling
+ * - Authentication protection - only signed-in users can access
  */
 
 "use client"; // This component needs client-side interactivity for forms, state, and file uploads
 
-import React, { useState, useRef } from "react"; // Import useState for state management and useRef for DOM access
+import React, { useState, useRef, useEffect } from "react"; // Import useState for state management and useRef for DOM access
+import { useSession } from "next-auth/react"; // Import useSession for authentication
+import { useRouter } from "next/navigation"; // Import useRouter for navigation
 
 export default function LendPage() {
+  const { data: session, status } = useSession(); // Get session data and loading status
+  const router = useRouter(); // Get router for navigation
+  
   // State management for form fields
   const [itemName, setItemName] = useState(""); // State for the item name input
   const [description, setDescription] = useState(""); // State for the item description textarea
   const [rentPerDay, setRentPerDay] = useState(""); // State for the daily rental price
   const [selectedFile, setSelectedFile] = useState<File | null>(null); // State for the uploaded image file
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref to access the file input DOM element for clearing
+
+  // Authentication check - redirect to login if not authenticated
+  useEffect(() => {
+    if (status === "loading") return; // Don't redirect while loading
+    
+    if (!session) {
+      // Redirect to login page with callback URL to return here after login
+      router.push("/login?callbackUrl=/lend");
+    }
+  }, [session, status, router]);
+
+  // Show loading state while checking authentication
+  if (status === "loading") {
+    return (
+      <main className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center bg-gray-50 py-12 px-4">
+        <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl p-10 border border-gray-200">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#766be0] mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // Don't render the form if user is not authenticated
+  if (!session) {
+    return null; // This will be replaced by the redirect
+  }
 
   /**
    * Handles file selection from the file input
@@ -54,6 +89,7 @@ export default function LendPage() {
       rentPerDay,
       fileName: selectedFile ? selectedFile.name : "No file selected", // Display the selected file name
       file: selectedFile, // The actual File object for backend processing
+      userId: session?.user?.id, // Include user ID for backend processing
     });
 
     // Clear all form fields after successful submission
@@ -74,6 +110,11 @@ export default function LendPage() {
       <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl p-10 border border-gray-200">
         {/* Page title using the site's serif font and brand color */}
         <h1 className="text-3xl font-serif font-bold text-center text-[#766be0] mb-8">Lend Your Item</h1>
+        
+        {/* Welcome message for authenticated user */}
+        <p className="text-center text-gray-600 mb-6">
+          Welcome, {session.user?.name || session.user?.email}! Ready to lend your item?
+        </p>
         
         {/* Form element with proper spacing between fields */}
         <form onSubmit={handleSubmit} className="space-y-6">

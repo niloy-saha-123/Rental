@@ -6,13 +6,15 @@
 'use client'; // UI components are typically client components
 
 import * as React from 'react';
-import { cn } from '@/lib/utils'; // Assuming cn utility is from src/lib/utils.ts
+import { cn } from '@/lib/utils';
 
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {}
+  extends React.InputHTMLAttributes<HTMLInputElement> {
+  suppressHydrationWarning?: boolean;
+}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, suppressHydrationWarning, ...props }, ref) => {
     return (
       <input
         type={type}
@@ -21,6 +23,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           className
         )}
         ref={ref}
+        suppressHydrationWarning={suppressHydrationWarning}
         {...props}
       />
     );
