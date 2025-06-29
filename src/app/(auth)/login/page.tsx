@@ -101,12 +101,8 @@ export default function LoginPage() {
 
   return (
     <div className='flex flex-col items-center justify-center min-h-[calc(100vh-128px)] p-4'>
-      <div className='w-full max-w-md bg-white p-8 rounded-lg shadow-md border border-primary-light'>
-        {' '}
-        {/* Added border */}
-        <h1 className='text-2xl font-bold text-center mb-6 text-primary font-serif'>
-          {' '}
-          {/* Added text color & font-serif */}
+      <div className='w-full max-w-md bg-white p-8 rounded-lg shadow-md border border-gray-200'>
+        <h1 className='text-2xl font-bold text-center mb-6 text-my-primary font-serif'>
           Login to Gear Up
         </h1>
         {error && <p className='text-red-500 text-center mb-4'>{error}</p>}
@@ -116,19 +112,22 @@ export default function LoginPage() {
             placeholder='Email'
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className='rounded-md' // Ensure input rounding
+            className='rounded-md'
+            suppressHydrationWarning={true}
           />
           <Input
             type='password'
             placeholder='Password'
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className='rounded-md' // Ensure input rounding
+            className='rounded-md'
+            suppressHydrationWarning={true}
           />
           <Button
             onClick={handleCredentialsSignIn}
             disabled={loading}
-            className='w-full bg-primary hover:bg-primary-dark rounded-md' // Updated button colors & rounding
+            className='w-full bg-my-primary hover:bg-my-primary-dark rounded-md text-white'
+            suppressHydrationWarning={true}
           >
             {loading ? 'Logging in...' : 'Login with Email'}
           </Button>
@@ -137,17 +136,18 @@ export default function LoginPage() {
         <Button
           onClick={handleGoogleSignIn}
           disabled={loading}
-          icon={<GoogleIcon />}
-          variant='outline' // Use outline variant for social buttons
-          className='w-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-md' // Styled for Google
+          className='w-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-md flex items-center justify-center gap-2'
+          suppressHydrationWarning={true}
         >
+          <GoogleIcon />
           {loading ? 'Signing in...' : 'Sign in with Google'}
         </Button>
         <p className='text-center text-sm mt-6'>
           Don't have an account?{' '}
           <button
             onClick={() => router.push('/signup')}
-            className='text-primary hover:underline font-medium' // Updated link color
+            className='text-my-primary hover:underline font-medium'
+            suppressHydrationWarning={true}
           >
             Sign Up
           </button>

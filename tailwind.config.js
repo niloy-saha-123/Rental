@@ -8,17 +8,17 @@ module.exports = {
     './pages/**/*.{js,ts,jsx,tsx,mdx}', // If you use Pages Router
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}', // For App Router
-    './src/**/*.{js,ts,jsx,tsx,mdx}', // Ensure src directory is included
+    './src/**/*.{js,ts,jsx,tsx,mdx}', // Ensure src directory is included (from main's content)
   ],
   theme: {
     extend: {
-      // Your friend's additions for background images.
+      // Background images (from main)
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
-      // --- Shadcn UI Color & Border Configuration ---
+      // --- Shadcn UI Color & Border Configuration (from main) ---
       // This maps Tailwind's color names to the CSS variables defined in globals.css.
       // This is crucial for Shadcn UI components to be styled correctly.
       colors: {
@@ -55,18 +55,17 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // --- Your Custom Purple Theme Colors (override default primary) ---
+        // --- Your Custom Purple Theme Colors (integrated with main's color structure) ---
         // These are the direct HSL values for your purple shades.
         // Make sure these match the --primary HSL values in globals.css for consistency if desired.
         // For now, these direct hex codes will be used.
-        'my-primary': {
-          // Renamed to 'my-primary' to avoid conflict with Shadcn's primary
+        'my-primary': { // Renamed from 'primary' to 'my-primary' to avoid conflict with Shadcn's primary
           DEFAULT: '#766be0', // Your main purple/indigo color
           light: '#9e99eb', // A lighter shade for backgrounds or subtle accents
           dark: '#5c52b3', // A darker shade for hover states or deeper accents
         },
       },
-      // Custom border radius values for more consistent rounding.
+      // Custom border radius values for more consistent rounding (from main).
       borderRadius: {
         lg: 'var(--radius)', // Uses the --radius CSS variable from globals.css
         md: 'calc(var(--radius) - 2px)',
@@ -74,11 +73,9 @@ module.exports = {
         xl: '1rem', // Example: more rounded corners
         // Ensure standard Tailwind classes like 'rounded-md' still work
       },
-      // Custom font families integrated with Tailwind's defaults via CSS variables.
+      // Custom font families integrated with Tailwind's defaults via CSS variables (from your branch).
       fontFamily: {
-        // Sets Inter as the default sans-serif font, falling back to Tailwind's system sans-serif stack.
         sans: ['var(--font-inter)', ...fontFamily.sans],
-        // Sets Playfair Display as the default serif font, falling back to Tailwind's system serif stack.
         serif: ['var(--font-playfair)', ...fontFamily.serif],
       },
     },

@@ -15,7 +15,7 @@ export default function AuthLayout({
     // A simple section or div to wrap the children (our login/signup pages).
     // We can add specific styling or components here later that are unique
     // to our auth flows, e.g., centering the form or a background image.
-    <section className='flex items-center justify-center min-h-screen bg-gray-100'>
+    <section className='flex items-center justify-center min-h-[calc(100vh-128px)] bg-gray-100'>
       {children}
     </section>
   );

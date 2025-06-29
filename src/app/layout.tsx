@@ -9,8 +9,8 @@
 
 import type { Metadata } from 'next'; // Imports Metadata type for SEO.
 import { Inter, Playfair_Display } from 'next/font/google'; // Import fonts, including Playfair_Display.
-import '@/app/global.css'; // Imports global CSS styles.
-import Header from '../components/layout/Header'; // Imports Header component.
+import '@/app/global.css'; // Imports global CSS styles using absolute path.
+import Header from '@/components/layout/Header'; // Imports Header component using absolute path.
 
 // Import the Providers Client Component
 import Providers from './providers'; // Imports our client-side Providers wrapper component.
@@ -30,7 +30,7 @@ const inter = Inter({
 
 // Defines metadata for the application (e.g., for SEO).
 export const metadata: Metadata = {
-  title: 'Rental', // Title displayed in the browser tab.
+  title: 'Dhar - Rent & Lend Anything', // Updated title from your branch
   description: 'Rent anything you need, lend anything you own.', // Meta description for search engines.
 };
 
@@ -42,9 +42,10 @@ export default function RootLayout({
   children: React.ReactNode; // Defines children as a React node.
 }) {
   return (
+    // Combined classNames from both branches to apply fonts correctly
     <html lang='en' className={`${inter.variable} ${playfair.variable}`}>
       <body suppressHydrationWarning={true}>
-        {/* Wrap the main content with the Providers Client Component */}
+        {/* Wrap the main content with the Providers Client Component (from main) */}
         {/* This establishes the client-server boundary correctly for context providers */}
         <Providers>
           {/* Wraps the entire application with client-side context providers. */}

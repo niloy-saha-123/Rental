@@ -48,11 +48,12 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {
   asChild?: boolean; // For advanced usage with Shadcn's Slot component
   icon?: React.ReactNode; // Optional prop to render an icon inside the button.
+  suppressHydrationWarning?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { className, variant, size, asChild = false, icon, children, ...props },
+    { className, variant, size, asChild = false, icon, children, suppressHydrationWarning, ...props },
     ref
   ) => {
     // If using asChild, it will render the child element as the button, applying button styles.
@@ -63,6 +64,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        suppressHydrationWarning={suppressHydrationWarning}
         {...props}
       >
         {icon && <span className='mr-2'>{icon}</span>}{' '}
