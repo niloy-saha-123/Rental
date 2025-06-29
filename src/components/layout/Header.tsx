@@ -57,7 +57,7 @@ export default function Header() {
     <header className="p-4 bg-[#766be0] text-white flex justify-between items-center relative font-serif shadow-lg z-50">
 
       {/* Top Left - Home Icon (SVG) */}
-      <a href="/" className="flex items-center gap-2 text-white no-underline hover:opacity-80 transition-opacity">
+      <a href="/" className="flex items-center gap-2 text-white no-underline">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
