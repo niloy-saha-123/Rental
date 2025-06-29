@@ -1,43 +1,57 @@
 /* src/app/globals.css */
 
-/* Ensure these are at the top if they are not already */
+/* Ensure these are at the top as they are fundamental for Tailwind CSS */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Shadcn UI Base Styles and CSS Variables */
+/* These define the HSL (Hue, Saturation, Lightness) values for Shadcn's color system. */
+/* Your custom purple color is explicitly mapped to --primary here. */
 @layer base {
   :root {
-    --background: 0 0% 100%; /* White */
-    --foreground: 222.2 84% 4.9%; /* Black/Dark Gray */
+    /* Primary Background and Foreground colors based on standard light theme values */
+    --background: 0 0% 100%; /* White: Used for main page background */
+    --foreground: 222.2 84% 4.9%; /* Near-black: Used for primary text color */
 
+    /* Muted colors for less prominent text or backgrounds */
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --popover: 0 0% 100%; /* White for popovers */
-    --popover-foreground: 222.2 84% 4.9%; /* Black/Dark Gray for popover text */
+    /* Popover colors: Used for floating elements like calendars, dropdowns, tooltips */
+    --popover: 0 0% 100%; /* White: Popover background */
+    --popover-foreground: 222.2 84% 4.9%; /* Near-black: Popover text */
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Border and Input field colors */
+    --border: 214.3 31.8% 91.4%; /* Light gray: Border color for inputs, cards */
+    --input: 214.3 31.8% 91.4%; /* Light gray: Input field background/border */
+    --card: 0 0% 100%; /* White: Card background */
+    --card-foreground: 222.2 84% 4.9%; /* Near-black: Card text */
 
-    --primary: 221.2 83.2% 53.3%; /* Default blue - we'll override this with your purple in tailwind.config.js */
-    --primary-foreground: 210 40% 98%; /* White text on primary */
+    /* YOUR CUSTOM PRIMARY COLOR - Mapped to Shadcn's --primary variable */
+    /* This HSL value maps to your #766be0 purple: hsl(252, 60%, 65%) approx. */
+    --primary: 252 60% 65%; /* This is your purple color: #766be0 */
+    --primary-foreground: 210 40% 98%; /* Off-white: Text color for elements with primary background */
 
+    /* Secondary colors */
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
+    /* Accent colors for hover states or active elements */
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
+    /* Destructive colors for errors or dangerous actions */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
+    /* Ring color for focus states, typically used for outlines */
     --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem; /* Default border radius for components */
+    --radius: 0.5rem; /* Default border-radius for most Shadcn components */
   }
 
+  /* Dark mode variants (optional, but good to include for completeness) */
+  /* These provide different HSL values for dark theme */
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -69,25 +83,31 @@
   }
 }
 
+/* Base styles that apply the CSS variables to default HTML elements */
+/* These use the CSS variables defined above to apply default styling to HTML elements */
 @layer base {
   * {
+    /* Universal selector: Applies box-sizing and default border color to all elements */
     @apply border-border;
   }
   body {
+    /* Applies background and text color to the main body of the page */
     @apply bg-background text-foreground;
   }
 }
 
 /* Custom utility for responsive grid columns */
+/* This defines a custom Tailwind utility class for a responsive grid layout */
 @layer utilities {
   .grid-cols-auto-fill-minmax-250 {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 }
 
-/* Apply font variables to the root elements for a baseline */
+/* Apply font variables to the root HTML and heading elements for a baseline */
 html {
-  font-family: var(--font-inter), sans-serif; /* Default body font */
+  font-family:
+    var(--font-inter), sans-serif; /* Sets Inter as the default font for the entire document */
 }
 
 h1,
@@ -96,10 +116,12 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-playfair), serif; /* Headings font */
+  font-family:
+    var(--font-playfair), serif; /* Sets Playfair Display as the font for all heading elements */
 }
 
 /* You might remove default browser margins/paddings if needed */
+/* Basic reset for body margins and paddings */
 body {
   margin: 0;
   padding: 0;

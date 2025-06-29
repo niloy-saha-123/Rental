@@ -108,7 +108,7 @@ export default function LoginPage() {
           className='rounded-full overflow-hidden' // Ensure button itself is pill-shaped if SVG is pill-shaped
         />
         <p className='text-center text-sm mt-6'>
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <button
             onClick={() => router.push('/signup')}
             className='text-primary hover:underline font-medium' // Updated link color

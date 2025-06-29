@@ -44,8 +44,8 @@ export default withAuth(
     // You'll need to fetch the full user profile in `protectedProcedure`'s context or a separate API.
     // For now, this check is a placeholder and assumes `birthday` and `phoneNumber` might be on the token if added there.
     // A more robust check might involve hitting a tRPC endpoint for user details.
-    const userHasMissingDetails =
-      token && (!token.birthday || !token.phoneNumber); // Placeholder: Adjust this condition
+    // const userHasMissingDetails =
+    //   token && (!token.birthday || !token.phoneNumber); // Commented for now, might need later
     // For a robust check, you might fetch user from DB in middleware's `authorized` callback
     // or use a `user.getProfile` procedure in `createContext` and pass `isProfileComplete`
 
@@ -95,7 +95,7 @@ export default withAuth(
     // The `callbacks.authorized` function determines if a user is authenticated.
     // It's called before the `middleware` function above.
     callbacks: {
-      async authorized({ token, req }) {
+      async authorized({ token /*, req*/ }) {
         // Return `true` if the token exists (user is authenticated), `false` otherwise.
         // This is a simple check. More complex authorization (e.g., role-based) can go here.
         // Also, this is where you could potentially fetch full user details for profile completeness check.

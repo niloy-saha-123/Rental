@@ -29,7 +29,7 @@ export default function OnboardingPage() {
 
   // tRPC mutation to update user profile
   const updateProfileMutation = api.user.updateProfile.useMutation({
-    onSuccess: (data) => {
+    onSuccess: () => {
       // If profile updated successfully, redirect to homepage
       router.push('/');
     },

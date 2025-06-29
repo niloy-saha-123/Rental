@@ -6,6 +6,7 @@
  *
  */
 import * as React from 'react';
+import Image from 'next/image';
 
 // Define props for the GoogleButton component to specify its type and onClick handler.
 interface GoogleButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
@@ -37,11 +38,12 @@ const GoogleButton = ({
                   ${className || ''}`}
       {...props} // Pass any additional button attributes
     >
-      <img
+      <Image
         src={svgSrc}
         alt={`Sign ${type} with Google`}
+        fill
         // Ensure the image covers the button area without distortion.
-        className='absolute inset-0 w-full h-full object-cover pointer-events-none'
+        className='object-cover pointer-events-none'
       />
       {/* Optional: Add text overlay if needed, but the SVG already contains text.
           If the SVG contains text, this is mostly for screen readers or fallback. */}

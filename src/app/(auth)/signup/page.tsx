@@ -18,23 +18,19 @@ import { api } from '@/lib/trpc/client';
 import { signupSchema } from '@/lib/validators/authSchema';
 import { z } from 'zod'; // Zod for client-side validation
 
-// Using Input and Button components from components/ui (now possibly Shadcn's versions)
+// Using Input and Button components from components/ui
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
-// NEW: Import Shadcn DatePicker components
-import { Calendar } from '@/components/ui/Calendar'; // The calendar UI itself
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/Popover'; // For the pop-up behavior
-import { format } from 'date-fns'; // Utility for date formatting (e.g., toISOString)
-import { CalendarIcon } from 'lucide-react'; // Calendar icon (requires lucide-react)
+// Removed: DatePicker components and date-fns import
+// import { Calendar } from '@/components/ui/Calendar';
+// import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover';
+// import { format } from 'date-fns';
+// import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils'; // cn utility for conditional class names
 
-// Importing the GoogleIcon component from the icons folder
-import GoogleButton from '@/components/icons/GoogleIcon'; // Changed from GoogleIcon to GoogleButton
+// Importing the GoogleButton component from the icons folder
+import GoogleButton from '@/components/icons/GoogleIcon';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -42,13 +38,14 @@ export default function SignUpPage() {
     name: '',
     email: '',
     password: '',
-    // birthday: '', // Removed from formData as it's managed by 'date' state
+    birthday: '', // Birthday is now a simple text input in YYYY-MM-DD format
     phoneNumber: '', // Optional
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [date, setDate] = useState<Date>(); // State for the DatePicker component (holds Date object)
+  // Removed: DatePicker state
+  // const [date, setDate] = useState<Date>();
 
   // Use the tRPC mutation hook for signup
   const signupMutation = api.auth.signup.useMutation({
@@ -88,7 +85,6 @@ export default function SignUpPage() {
     },
   });
 
-  // This handleChange is only for name, email, password, phoneNumber
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -100,17 +96,11 @@ export default function SignUpPage() {
     setSuccess(null);
 
     try {
-      // Prepare dataToSend: Combine formData with the date picker's 'date' state for birthday
-      const dataToSend = {
-        ...formData,
-        // Format the Date object from 'date' state to 'YYYY-MM-DD' string for the backend
-        birthday: date ? format(date, 'yyyy-MM-dd') : undefined, // Use undefined if no date selected, as it's optional
-      };
-
       // Client-side validation using Zod before sending to API
-      signupSchema.parse(dataToSend); // Validate the combined and formatted data
+      // Birthday is now taken directly from formData
+      signupSchema.parse(formData); // Validate formData directly
 
-      await signupMutation.mutateAsync(dataToSend); // Send the validated data
+      await signupMutation.mutateAsync(formData); // Send formData directly
     } catch (err) {
       if (err instanceof z.ZodError) {
         setError(err.errors.map((e) => e.message).join('. '));
@@ -176,32 +166,15 @@ export default function SignUpPage() {
             required
             className='rounded-md'
           />
-          {/* Date Picker Component for Birthday */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={'outline'}
-                className={cn(
-                  'w-full justify-start text-left font-normal rounded-md',
-                  !date && 'text-muted-foreground'
-                )}
-              >
-                <CalendarIcon className='mr-2 h-4 w-4' /> {/* Calendar icon */}
-                {date ? format(date, 'PPP') : <span>Pick a birthday</span>}{' '}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className='w-auto p-0'>
-              <Calendar
-                mode='single'
-                selected={date}
-                onSelect={setDate} // This updates the 'date' state directly
-                initialFocus
-                captionLayout='dropdown'
-                fromYear={1900}
-                toYear={new Date().getFullYear()}
-              />
-            </PopoverContent>
-          </Popover>
+          {/* Re-added: Simple Input field for Birthday, without date picker functionality */}
+          <Input
+            name='birthday'
+            type='text' // Use 'text' or 'date' (native browser picker)
+            placeholder='Birthday (YYYY-MM-DD)' // Inform user of format
+            value={formData.birthday}
+            onChange={handleChange}
+            className='rounded-md'
+          />
 
           <Input
             name='phoneNumber'
@@ -223,10 +196,10 @@ export default function SignUpPage() {
         <div className='my-6 text-center text-gray-500'>OR</div>
 
         <GoogleButton
-          type='signup' // Specify 'signup' type for this button
+          type='signup'
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className='rounded-full overflow-hidden' // Ensure button itself is pill-shaped if SVG is pill-shaped
+          className='rounded-full overflow-hidden'
         />
 
         <p className='text-center text-sm mt-6'>

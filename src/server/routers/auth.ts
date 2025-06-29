@@ -6,7 +6,7 @@
  */
 
 // Zod for input validation based on the schema defined in src/lib/validators.
-import { z } from 'zod';
+import { z } from 'zod'; // Imports Zod for schema validation.
 // Hash function from bcryptjs for securely storing passwords.
 import { hash } from 'bcryptjs';
 // Import Prisma's User type from @prisma/client for explicit typing.
