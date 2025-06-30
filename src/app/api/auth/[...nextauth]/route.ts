@@ -154,8 +154,10 @@ export const authOptions: AuthOptions = {
         token.name = user.name;
         token.image = user.image;
         // Assign custom properties from our User model. These must be defined in src/types/next-auth.d.ts.
-        (token as any).birthday = (user as any).birthday; // Use explicit type for user to avoid 'any'
-        (token as any).phoneNumber = (user as any).phoneNumber; // Use explicit type for user to avoid 'any'
+        (token as unknown as any).birthday = (user as unknown as any).birthday; // Use explicit type for user to avoid 'any'
+        (token as unknown as any).phoneNumber = (
+          user as unknown as any
+        ).phoneNumber; // Use explicit type for user to avoid 'any'
       }
       return token;
     },
@@ -177,8 +179,12 @@ export const authOptions: AuthOptions = {
         session.user.name = token.name;
         session.user.image = token.picture; // 'picture' is standard JWT claim for image URL
         // Assign custom properties from the token to the session user object. These must be defined in src/types/next-auth.d.ts.
-        (session.user as any).birthday = (token as any).birthday; // Use explicit type for token to avoid 'any'
-        (session.user as any).phoneNumber = (token as any).phoneNumber; // Use explicit type for token to avoid 'any'
+        (session.user as unknown as any).birthday = (
+          token as unknown as any
+        ).birthday; // Use explicit type for token to avoid 'any'
+        (session.user as unknown as any).phoneNumber = (
+          token as unknown as any
+        ).phoneNumber; // Use explicit type for token to avoid 'any'
       }
       return session;
     },

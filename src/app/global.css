@@ -84,10 +84,9 @@
 }
 
 /* Base styles that apply the CSS variables to default HTML elements */
-/* These use the CSS variables defined above to apply default styling to HTML elements */
 @layer base {
   * {
-    /* Universal selector: Applies box-sizing and default border color to all elements */
+    /* Universal selector for box-sizing and border color */
     @apply border-border;
   }
   body {
@@ -121,7 +120,6 @@ h6 {
 }
 
 /* You might remove default browser margins/paddings if needed */
-/* Basic reset for body margins and paddings */
 body {
   margin: 0;
   padding: 0;

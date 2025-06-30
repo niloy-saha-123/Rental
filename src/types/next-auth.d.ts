@@ -5,10 +5,6 @@
  * to the session object that is accessible on the client-side (`useSession`) and within JWTs.
  */
 
-// These imports are necessary for TypeScript to correctly merge types from the next-auth library.
-import NextAuth from 'next-auth'; // Imports core NextAuth types.
-import { JWT } from 'next-auth/jwt'; // Imports JWT-specific types.
-
 declare module 'next-auth' {
   /**
    * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
