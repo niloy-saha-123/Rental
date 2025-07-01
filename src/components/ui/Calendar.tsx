@@ -1,3 +1,9 @@
+/**
+ * @file src/components/ui/Calendar.tsx
+ * @description A reusable React Calendar component from Shadcn UI, built on `react-day-picker`.
+ * It provides a highly customizable and accessible date picker UI for selecting dates.
+ */
+
 'use client';
 
 import * as React from 'react';
@@ -221,8 +227,8 @@ export function Calendar({
         month={month}
         onMonthChange={setMonth}
         showOutsideDays
-        fromYear={fromYear}
-        toYear={toYear}
+        startMonth={new Date(fromYear, 0)}
+        endMonth={new Date(toYear, 11)}
         components={{
           MonthCaption: (props) => (
             <CustomCaption calendarMonth={props.calendarMonth} />
@@ -235,7 +241,8 @@ export function Calendar({
           caption: 'flex justify-center pt-1 relative items-center',
           caption_label: 'text-base font-medium',
           nav: 'hidden', // Hide default nav
-          day: 'h-12 w-12 p-0 font-normal rounded-lg text-lg hover:bg-primary/10 transition',
+          head_cell: 'h-12 w-12 text-center font-normal',
+          day: 'h-12 w-12 p-0 mt-2 font-normal rounded-lg text-lg text-center hover:bg-primary/10 transition',
           day_selected:
             'bg-primary text-white hover:bg-primary focus:bg-primary',
           day_today: 'border border-primary',
