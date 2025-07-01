@@ -26,7 +26,6 @@ import { cn } from '@/lib/utils';
 
 // Importing the GoogleButton component from the icons folder
 import GoogleButton from '@/components/icons/GoogleIcon';
-import { DateInput } from '@/components/ui/DateInput';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -168,15 +167,37 @@ export default function SignUpPage() {
             className='rounded-md'
           />
 
-          {/* Birthday DateInput */}
-          <DateInput
-            value={date}
-            onChange={(d) => setDate(d ?? null)}
-            label='Birthday'
-            required
-            minYear={1900}
-            maxYear={new Date().getFullYear()}
-          />
+          {/* Birthday Picker - Simple Professional Setup */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type='button'
+                variant='outline'
+                className={cn(
+                  'w-full justify-start text-left font-normal pl-3',
+                  !date && 'text-muted-foreground'
+                )}
+              >
+                <CalendarIcon className='mr-2 h-4 w-4 text-muted-foreground' />
+                {date ? (
+                  format(date, 'MM/dd/yyyy')
+                ) : (
+                  <span className='text-muted-foreground'>
+                    Select your birthday
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align='start' className='p-0 mt-2'>
+              <Calendar
+                selected={date}
+                onSelect={(d) => setDate(d ?? null)}
+                fromYear={1900}
+                toYear={new Date().getFullYear()}
+                initialMonth={date || undefined}
+              />
+            </PopoverContent>
+          </Popover>
 
           <Input
             name='phoneNumber'
