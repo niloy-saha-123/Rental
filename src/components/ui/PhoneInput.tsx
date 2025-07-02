@@ -31,36 +31,54 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
     },
     ref
   ) => {
-    // Only store digits, always start with 1
+    // Only store digits after +1
     const getDigits = (val: string) => val.replace(/\D/g, '');
-    const formatPhone = (digits: string) => {
-      if (!digits || digits === '1') return '';
-      let formatted = '';
-      if (digits.length > 0) formatted += '+1 ';
-      if (digits.length > 1) formatted += '(' + digits.slice(1, 4);
-      if (digits.length >= 4) formatted += ') ';
-      if (digits.length >= 4) formatted += digits.slice(4, 7);
-      if (digits.length >= 7) formatted += '-' + digits.slice(7, 11);
-      return formatted.trim();
-    };
 
     // Handler for input changes
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      let digits = getDigits(e.target.value);
-      if (!digits.startsWith('1')) digits = '1' + digits;
-      if (digits.length > 11) digits = digits.slice(0, 11);
-      onChange?.('+' + digits);
+      let raw = e.target.value;
+      // Remove everything except digits after +1
+      let digits = getDigits(raw.replace(/^\+1\s?/, ''));
+      // Only allow up to 10 digits after +1
+      if (digits.length > 10) digits = digits.slice(0, 10);
+      onChange?.(digits ? `+1 ${digits}` : '');
     };
 
-    // Handler for blur (validate only on blur)
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-      if (onBlur) onBlur(e);
+    // Handler for keydown to block invalid chars and prevent removing '+1 '
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      const input = e.currentTarget;
+      const allowed = [
+        'Backspace',
+        'Delete',
+        'ArrowLeft',
+        'ArrowRight',
+        'Tab',
+        'Home',
+        'End',
+      ];
+      if (
+        allowed.includes(e.key) ||
+        (e.ctrlKey && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase()))
+      ) {
+        // Prevent removing '+1 '
+        if (
+          e.key === 'Backspace' &&
+          input.selectionStart !== null &&
+          input.selectionStart <= 3
+        ) {
+          e.preventDefault();
+        }
+        return;
+      }
+      // Only allow digits
+      if (!/\d/.test(e.key)) {
+        e.preventDefault();
+      }
     };
 
-    // Always format for display, but keep value as digits
-    const digits = getDigits(value);
-    // If empty or just '1', show empty string so placeholder appears
-    const formattedValue = !digits || digits === '1' ? '' : formatPhone(digits);
+    // Show placeholder if empty or just '+1 '
+    const showPlaceholder = !value || value === '+1 ';
+    const displayValue = showPlaceholder ? '' : value;
 
     return (
       <div className='w-full'>
@@ -68,12 +86,14 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
           ref={ref}
           type='tel'
           name={name}
-          value={formattedValue}
+          value={displayValue}
           onChange={handleChange}
-          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          onBlur={onBlur}
           placeholder={placeholder}
           className={className}
-          maxLength={17}
+          maxLength={14}
+          autoComplete='off'
           {...props}
         />
         {error && <div className='text-xs text-red-500 mt-1'>{error}</div>}

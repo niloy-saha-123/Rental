@@ -224,7 +224,6 @@ export default function SignUpPage() {
             }}
             error={phoneError}
             name='phoneNumber'
-            placeholder='+1 (___) ___ ____'
             className='rounded-md'
             onBlur={() => {
               if (
