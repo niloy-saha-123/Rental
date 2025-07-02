@@ -25,11 +25,14 @@ export const signupSchema = z.object({
     .string()
     .min(2, 'Name must be at least 2 characters long.')
     .max(50, 'Name cannot exceed 50 characters.'),
-  // Birthday is optional for the schema, but typically collected.
-  // It expects a string from the form, which is then coerced to a Date object.
-  birthday: z.string().optional().pipe(z.coerce.date().optional()),
+  // Birthday is required for the schema. It expects a string from the form, coerced to a Date object.
+  birthday: z.string().pipe(z.coerce.date()),
   // phoneNumber is optional for this signup method but present in the User model.
-  phoneNumber: z.string().optional().nullable(), // Allow null as it's optional
+  phoneNumber: z
+    .string()
+    .regex(/^\+1\d{10}$/, 'Phone number must be a valid US number')
+    .optional()
+    .nullable(), // Allow null as it's optional and must match +1XXXXXXXXXX if present
 });
 
 // Schema for user login data (used by CredentialsProvider).

@@ -16,6 +16,7 @@ import { z } from 'zod'; // For client-side validation
 // Assuming Input and Button components exist
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function OnboardingPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   // tRPC mutation to update user profile
   const updateProfileMutation = api.user.updateProfile.useMutation({
@@ -33,7 +35,7 @@ export default function OnboardingPage() {
       // If profile updated successfully, redirect to homepage
       router.push('/');
     },
-    onError: (err) => {
+    onError: (err: any) => {
       console.error('Profile Update Error:', err);
       if (err.data?.zodError) {
         setError(
@@ -60,16 +62,17 @@ export default function OnboardingPage() {
     }
 
     // Populate form if user has existing data (e.g., if they came back to this page)
-    if (session.user.birthday) {
+    const user = session.user as any; // Type assertion for extended session user
+    if (user?.birthday) {
       // Format Date object to YYYY-MM-DD for input type="date"
-      const date = new Date(session.user.birthday);
+      const date = new Date(user.birthday);
       const formattedDate = date.toISOString().split('T')[0];
       setFormData((prev) => ({ ...prev, birthday: formattedDate }));
     }
-    if (session.user.phoneNumber) {
+    if (user?.phoneNumber) {
       setFormData((prev) => ({
         ...prev,
-        phoneNumber: session.user.phoneNumber as string,
+        phoneNumber: user.phoneNumber as string,
       }));
     }
 
@@ -88,6 +91,13 @@ export default function OnboardingPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Validate phone number before submit
+    if (formData.phoneNumber && !/^\+1\d{10}$/.test(formData.phoneNumber)) {
+      setPhoneError('Enter a valid US phone number');
+      setLoading(false);
+      return;
+    }
 
     try {
       // Basic client-side validation using Zod (adjust schema as needed for this form)
@@ -170,12 +180,21 @@ export default function OnboardingPage() {
             onChange={handleChange}
             required
           />
-          <Input
-            name='phoneNumber'
-            type='tel'
-            placeholder='Phone Number (Optional)'
+          <PhoneInput
             value={formData.phoneNumber}
-            onChange={handleChange}
+            onChange={(val) => {
+              setFormData((prev) => ({ ...prev, phoneNumber: val }));
+              // Validate phone number: must be empty or +1 followed by 10 digits
+              if (!val || /^\+1\d{10}$/.test(val)) {
+                setPhoneError(null);
+              } else {
+                setPhoneError('Enter a valid US phone number');
+              }
+            }}
+            error={phoneError}
+            name='phoneNumber'
+            placeholder='+1 (___) ___ ____'
+            className='rounded-md'
           />
           <Button type='submit' disabled={loading} className='w-full'>
             {loading ? 'Saving...' : 'Complete Profile'}

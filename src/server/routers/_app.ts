@@ -11,6 +11,8 @@ import { router } from '../trpc';
 import { gearRouter } from './gear'; // Assuming you have this or will create it.
 // NEW: Import the new authentication router.
 import { authRouter } from './auth';
+// Import the user router for profile management
+import { userRouter } from './user';
 
 // This is your main tRPC app router.
 // It combines all your individual routers into one API.
@@ -21,6 +23,9 @@ export const appRouter = router({
   // NEW: Include the authentication router under the 'auth' namespace.
   // Access via: api.auth.signup, api.auth.login (if you add login procedure to it).
   auth: authRouter,
+  // Include the user router under the 'user' namespace.
+  // Access via: api.user.updateProfile, api.user.getProfile, etc.
+  user: userRouter,
   // Add other routers here as your application grows (e.g., booking, user_profile).
 });
 

@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 
 // Importing the GoogleButton component from the icons folder
 import GoogleButton from '@/components/icons/GoogleIcon';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -39,6 +40,7 @@ export default function SignUpPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | null>(null); // State for the Calendar component (holds Date object)
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   // Use the tRPC mutation hook for signup
   const signupMutation = api.auth.signup.useMutation({
@@ -89,12 +91,26 @@ export default function SignUpPage() {
     setError(null);
     setSuccess(null);
 
+    // Validate phone number before submit
+    if (formData.phoneNumber && !/^\+1\d{10}$/.test(formData.phoneNumber)) {
+      setPhoneError('Enter a valid US phone number');
+      setLoading(false);
+      return;
+    }
+
     try {
+      // Check if birthday is required
+      if (!date) {
+        setError('Birthday is required.');
+        setLoading(false);
+        return;
+      }
+
       // Prepare dataToSend: Combine formData with the date picker's 'date' state for birthday
       const dataToSend = {
         ...formData,
         // Format the Date object from 'date' state to 'YYYY-MM-DD' string
-        birthday: date ? format(date, 'yyyy-MM-dd') : undefined, // Use undefined if no date selected, as it's optional
+        birthday: format(date, 'yyyy-MM-dd'),
       };
 
       // Client-side validation using Zod before sending to API
@@ -199,13 +215,27 @@ export default function SignUpPage() {
             </PopoverContent>
           </Popover>
 
-          <Input
-            name='phoneNumber'
-            type='tel'
-            placeholder='Phone Number (Optional)'
+          {/* Phone Number Input */}
+          <PhoneInput
             value={formData.phoneNumber}
-            onChange={handleChange}
+            onChange={(val) => {
+              setFormData((prev) => ({ ...prev, phoneNumber: val }));
+              // No validation here!
+            }}
+            error={phoneError}
+            name='phoneNumber'
+            placeholder='+1 (___) ___ ____'
             className='rounded-md'
+            onBlur={() => {
+              if (
+                formData.phoneNumber &&
+                !/^\+1\d{10}$/.test(formData.phoneNumber)
+              ) {
+                setPhoneError('Enter a valid US phone number');
+              } else {
+                setPhoneError(null);
+              }
+            }}
           />
           <Button
             type='submit'

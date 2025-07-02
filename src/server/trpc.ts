@@ -14,7 +14,7 @@ import { type FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'; 
 import superjson from 'superjson'; // Imports SuperJSON for advanced serialization/deserialization.
 import { ZodError } from 'zod'; // Imports ZodError for handling validation errors from Zod schemas.
 // Import getServerSession to obtain the Auth.js session object from the request.
-import { getServerSession } from 'next-auth'; // Imports function to get session on the server.
+import { getServerSession } from 'next-auth/next'; // Imports function to get session on the server.
 // Import your Auth.js options, which define your authentication configuration.
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'; // Imports our Auth.js configuration.
 
@@ -106,7 +106,7 @@ export const protectedProcedure = t.procedure.use(
     // Defines the authentication middleware.
     // Check if a session exists in the context and if the user is present in the session.
     // The session object is populated in the `createContext` function.
-    if (!ctx.session || !ctx.session.user) {
+    if (!ctx.session || !(ctx.session as any).user) {
       // Checks if the session or user within the session is missing.
       // If no valid session, throw an unauthorized error.
       // This error will be caught by tRPC's error handler and sent to the client.

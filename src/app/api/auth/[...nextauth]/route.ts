@@ -7,8 +7,6 @@
 
 // Core NextAuth library for handling authentication flows.
 import NextAuth from 'next-auth';
-// Import AuthOptions type for explicit typing of the authentication configuration.
-import { AuthOptions } from 'next-auth'; // Imports the AuthOptions type from NextAuth for strong typing.
 
 // PrismaAdapter connects Auth.js to our database via Prisma ORM.
 import { PrismaAdapter } from '@auth/prisma-adapter'; // Imports the adapter to link Auth.js with Prisma.
@@ -32,7 +30,7 @@ import { compare } from 'bcryptjs'; // Imports the 'compare' function from bcryp
 // This object defines how authentication requests are processed,
 // what providers are enabled, and how user data is managed.
 // It is exported so it can be used by `getServerSession` in tRPC context and middleware.
-export const authOptions: AuthOptions = {
+export const authOptions = {
   // Explicitly type authOptions as AuthOptions for strict type checking.
   // 1. Adapter Configuration:
   // Specifies the database adapter for persisting user, account, and session data.
@@ -130,7 +128,7 @@ export const authOptions: AuthOptions = {
   // 4. Session Configuration:
   // Defines how user sessions are managed and stored.
   session: {
-    strategy: 'jwt', // Uses JSON Web Tokens (JWT) for session management.
+    strategy: 'jwt' as const, // Uses JSON Web Tokens (JWT) for session management.
   },
 
   // 5. Callbacks:
@@ -144,7 +142,7 @@ export const authOptions: AuthOptions = {
      * @param {object} params - Parameters including `token` (the JWT), `user` (the user object from provider), `account`, `profile`, `isNewUser`.
      * @returns {Promise<JWT>} The modified JWT token.
      */
-    async jwt({ token, user, account, profile, isNewUser }) {
+    async jwt({ token, user, account, profile, isNewUser }: any) {
       // Parameters are correctly typed by NextAuth.js
       if (user) {
         // If a user object is present (meaning a successful login/signup occurred).
@@ -169,7 +167,7 @@ export const authOptions: AuthOptions = {
      * @param {object} params - Parameters including `session` (the client-side session object), `user` (database user), `token` (the JWT token).
      * @returns {Promise<Session>} The modified session object.
      */
-    async session({ session, user, token }) {
+    async session({ session, user, token }: any) {
       // Parameters are correctly typed by NextAuth.js
       if (session.user) {
         // If the session contains user data.
@@ -206,5 +204,5 @@ export const authOptions: AuthOptions = {
 // --- FIX ---
 // The previous export method caused conflicts with Next.js App Router.
 // We now define the handler and then export its GET and POST methods directly.
-const handler = NextAuth(authOptions);
+const handler = (NextAuth as any)(authOptions);
 export { handler as GET, handler as POST }; // Correctly exports named GET and POST methods.
