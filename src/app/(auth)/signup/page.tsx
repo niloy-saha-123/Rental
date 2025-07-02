@@ -27,6 +27,8 @@ import { cn } from '@/lib/utils';
 // Importing the GoogleButton component from the icons folder
 import GoogleButton from '@/components/icons/GoogleIcon';
 import { PhoneInput } from '@/components/ui/PhoneInput';
+import { PasswordRequirements } from '@/components/ui/PasswordRequirements';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -41,6 +43,45 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | null>(null); // State for the Calendar component (holds Date object)
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRePassword, setShowRePassword] = useState(false);
+  const [rePassword, setRePassword] = useState('');
+  const [rePasswordTouched, setRePasswordTouched] = useState(false);
+
+  // Password requirements
+  const passwordRequirements = [
+    {
+      label: 'Enter at least 8 characters',
+      test: (pw: string) => pw.length >= 8,
+    },
+    {
+      label: 'Enter at least one uppercase letter',
+      test: (pw: string) => /[A-Z]/.test(pw),
+    },
+    {
+      label: 'Enter at least one lowercase letter',
+      test: (pw: string) => /[a-z]/.test(pw),
+    },
+    {
+      label: 'Enter at least one digit',
+      test: (pw: string) => /[0-9]/.test(pw),
+    },
+    {
+      label: 'Enter at least one special character (e.g., !, @, #, $)',
+      test: (pw: string) => /[^a-zA-Z0-9]/.test(pw),
+    },
+  ];
+
+  const allPasswordValid = passwordRequirements.every((r) =>
+    r.test(formData.password)
+  );
+
+  const passwordsMatch =
+    formData.password === rePassword && rePassword.length > 0;
+  const showRePasswordError = rePasswordTouched && !passwordsMatch;
 
   // Use the tRPC mutation hook for signup
   const signupMutation = api.auth.signup.useMutation({
@@ -85,11 +126,38 @@ export default function SignUpPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, password: e.target.value });
+    setPasswordTouched(true);
+    // Validate password and collect all errors
+    try {
+      signupSchema.shape.password.parse(e.target.value);
+      setPasswordErrors([]);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setPasswordErrors(err.errors.map((e) => e.message));
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
     setSuccess(null);
+    setLoading(true);
+
+    // Password requirements check
+    if (!allPasswordValid) {
+      setPasswordTouched(true);
+      setLoading(false);
+      return;
+    }
+    // Passwords match check
+    if (!passwordsMatch) {
+      setRePasswordTouched(true);
+      setLoading(false);
+      return;
+    }
 
     // Validate phone number before submit
     if (formData.phoneNumber && !/^\+1\d{10}$/.test(formData.phoneNumber)) {
@@ -173,15 +241,91 @@ export default function SignUpPage() {
             required
             className='rounded-md'
           />
-          <Input
-            name='password'
-            type='password'
-            placeholder='Password (min 8 chars)'
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className='rounded-md'
+          <div className='relative'>
+            <Input
+              name='password'
+              type={showPassword ? 'text' : 'password'}
+              placeholder='Password (min 8 chars)'
+              value={formData.password}
+              onChange={handlePasswordChange}
+              onFocus={() => {
+                setPasswordFocused(true);
+                // Auto-hide re-enter password if there's content in it
+                if (rePassword.length > 0) {
+                  setShowRePassword(false);
+                }
+              }}
+              onBlur={() => {
+                setPasswordFocused(false);
+                setPasswordTouched(true);
+              }}
+              required
+              className='rounded-md pr-10'
+            />
+            <button
+              type='button'
+              tabIndex={-1}
+              className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
+              onClick={() => {
+                setShowPassword((v) => !v);
+                // Auto-hide re-enter password if there's content in it
+                if (rePassword.length > 0) {
+                  setShowRePassword(false);
+                }
+              }}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          <PasswordRequirements
+            password={formData.password}
+            show={passwordFocused || !!formData.password || passwordTouched}
           />
+
+          {/* Re-enter password field */}
+          <div className='relative'>
+            <Input
+              name='repassword'
+              type={showRePassword ? 'text' : 'password'}
+              placeholder='Re-enter password'
+              value={rePassword}
+              onChange={(e) => {
+                setRePassword(e.target.value);
+                setRePasswordTouched(true);
+              }}
+              onFocus={() => {
+                setRePasswordTouched(true);
+                setShowPassword(false); // Always hide main password and close eye when focusing re-enter
+              }}
+              required
+              className='rounded-md pr-10'
+            />
+            <button
+              type='button'
+              tabIndex={-1}
+              className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
+              onClick={() => {
+                setShowRePassword((v) => !v);
+                // Always hide main password when toggling re-enter password eye
+                setShowPassword(false);
+              }}
+              aria-label={showRePassword ? 'Hide password' : 'Show password'}
+            >
+              {showRePassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          {rePasswordTouched && (
+            <div
+              className={
+                passwordsMatch
+                  ? 'text-green-600 text-xs mt-1'
+                  : 'text-red-500 text-xs mt-1'
+              }
+            >
+              {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
+            </div>
+          )}
 
           {/* Birthday Picker - Simple Professional Setup */}
           <Popover>
