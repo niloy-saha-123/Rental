@@ -33,6 +33,7 @@ interface CalendarProps {
   toYear?: number;
   initialMonth?: Date;
   className?: string;
+  modifiers?: any;
 }
 
 export function Calendar({
@@ -42,6 +43,7 @@ export function Calendar({
   toYear = new Date().getFullYear(),
   initialMonth,
   className,
+  modifiers,
 }: CalendarProps) {
   const [mode, setMode] = React.useState<'days' | 'months' | 'years'>('days');
   const [month, setMonth] = React.useState<Date>(
@@ -109,13 +111,26 @@ export function Calendar({
 
   // Year grid view
   if (mode === 'years') {
+    // How many years per page? (4 columns x 3 rows = 12 years)
+    const yearsPerPage = 12;
     const currentYear = month.getFullYear();
-    const startYear = Math.max(fromYear, currentYear - 8);
-    const endYear = Math.min(toYear, startYear + 11);
+    // Find the first year of the current page
+    const pageStartYear =
+      Math.floor((currentYear - fromYear) / yearsPerPage) * yearsPerPage +
+      fromYear;
+    const pageEndYear = Math.min(pageStartYear + yearsPerPage - 1, toYear);
     const years = Array.from(
-      { length: endYear - startYear + 1 },
-      (_, i) => startYear + i
+      { length: pageEndYear - pageStartYear + 1 },
+      (_, i) => pageStartYear + i
     );
+    // Pad with empty cells if needed
+    const paddedYears = [
+      ...years,
+      ...Array(yearsPerPage - years.length).fill(null),
+    ];
+    // Can we go left/right?
+    const canGoPrev = pageStartYear > fromYear;
+    const canGoNext = pageEndYear < toYear;
     return (
       <div
         className={cn(
@@ -128,9 +143,11 @@ export function Calendar({
             aria-label='Previous years'
             className='p-2 rounded hover:bg-gray-100 text-lg'
             onClick={() =>
-              setMonth(new Date(startYear - 12, month.getMonth(), 1))
+              setMonth(
+                new Date(pageStartYear - yearsPerPage, month.getMonth(), 1)
+              )
             }
-            disabled={startYear - 12 < fromYear}
+            disabled={!canGoPrev}
           >
             &lt;
           </button>
@@ -138,30 +155,45 @@ export function Calendar({
           <button
             aria-label='Next years'
             className='p-2 rounded hover:bg-gray-100 text-lg'
-            onClick={() => setMonth(new Date(endYear + 1, month.getMonth(), 1))}
-            disabled={endYear + 1 > toYear}
+            onClick={() =>
+              setMonth(
+                new Date(pageStartYear + yearsPerPage, month.getMonth(), 1)
+              )
+            }
+            disabled={!canGoNext}
           >
             &gt;
           </button>
         </div>
-        <div className='grid grid-cols-4 gap-4'>
-          {years.map((y) => (
-            <button
-              key={y}
-              className={cn(
-                'p-3 rounded-lg text-base font-medium hover:bg-primary/10 transition',
-                month.getFullYear() === y
-                  ? 'bg-primary/20 font-bold text-primary'
-                  : ''
-              )}
-              onClick={() => {
-                setMonth(new Date(y, month.getMonth(), 1));
-                setMode('months');
-              }}
-            >
-              {y}
-            </button>
-          ))}
+        <div
+          className='grid grid-cols-4 gap-4'
+          style={{ minHeight: `${3 * 44 + 2 * 16}px` }}
+        >
+          {paddedYears.map((y, idx) =>
+            y !== null ? (
+              <button
+                key={y}
+                className={cn(
+                  'h-[44px] min-h-[44px] max-h-[44px] w-full rounded-lg text-base font-medium hover:bg-primary/10 transition',
+                  month.getFullYear() === y
+                    ? 'bg-primary/20 font-bold text-primary'
+                    : ''
+                )}
+                onClick={() => {
+                  setMonth(new Date(y, month.getMonth(), 1));
+                  setMode('months');
+                }}
+              >
+                {y}
+              </button>
+            ) : (
+              <div
+                key={`empty-${idx}`}
+                className='h-[44px] min-h-[44px] max-h-[44px] w-full rounded-lg text-base font-medium transition flex items-center justify-center'
+                aria-hidden='true'
+              />
+            )
+          )}
         </div>
         <button
           className='mt-6 text-blue-500 underline'
@@ -226,7 +258,7 @@ export function Calendar({
         onSelect={onSelect}
         month={month}
         onMonthChange={setMonth}
-        showOutsideDays
+        fixedWeeks
         startMonth={new Date(fromYear, 0)}
         endMonth={new Date(toYear, 11)}
         components={{
@@ -252,6 +284,7 @@ export function Calendar({
           day_hidden: 'invisible',
         }}
         {...(initialMonth ? { initialMonth } : {})}
+        {...(modifiers ? { modifiers } : {})}
       />
     </div>
   );

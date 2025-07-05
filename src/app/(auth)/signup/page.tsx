@@ -13,20 +13,12 @@ import { z } from 'zod'; // Zod for client-side validation
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
-// Import Shadcn UI Calendar components
-import { Calendar } from '@/components/ui/Calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/Popover';
-import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns'; // Utility for date formatting (e.g., toISOString)
-import { cn } from '@/lib/utils';
 
 // Importing the GoogleButton component from the icons folder
 import GoogleButton from '@/components/icons/GoogleIcon';
-import { PhoneInput } from '@/components/ui/PhoneInput';
+import { ValidatedPhoneInput } from '@/components/ui/ValidatedPhoneInput';
+import { BirthdayPicker } from '@/components/ui/BirthdayPicker';
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -42,7 +34,7 @@ export default function SignUpPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | null>(null); // State for the Calendar component (holds Date object)
-  const [phoneError, setPhoneError] = useState<string | null>(null);
+
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
@@ -86,7 +78,7 @@ export default function SignUpPage() {
   // Use the tRPC mutation hook for signup
   const signupMutation = api.auth.signup.useMutation({
     onSuccess: async () => {
-      setSuccess('Account created successfully! Redirecting to login...');
+      setSuccess('Account created successfully! Redirecting to onboarding...');
       setError(null);
       // Automatically log in the user after successful signup
       const result = await signIn('credentials', {
@@ -101,7 +93,7 @@ export default function SignUpPage() {
         );
         setSuccess(null);
       } else if (result?.ok) {
-        router.push('/');
+        router.push('/onboarding');
       }
     },
     onError: (err) => {
@@ -146,6 +138,19 @@ export default function SignUpPage() {
     setSuccess(null);
     setLoading(true);
 
+    // Check all required fields
+    const missingFields = [];
+    if (!formData.name.trim()) missingFields.push('Full Name');
+    if (!formData.email.trim()) missingFields.push('Email');
+    if (!formData.password) missingFields.push('Password');
+    if (!rePassword) missingFields.push('Re-enter Password');
+
+    if (missingFields.length > 0) {
+      setError('Please fill in all required fields.');
+      setLoading(false);
+      return;
+    }
+
     // Password requirements check
     if (!allPasswordValid) {
       setPasswordTouched(true);
@@ -155,36 +160,23 @@ export default function SignUpPage() {
     // Passwords match check
     if (!passwordsMatch) {
       setRePasswordTouched(true);
-      setLoading(false);
-      return;
-    }
-
-    // Validate phone number before submit
-    if (formData.phoneNumber && !/^\+1\d{10}$/.test(formData.phoneNumber)) {
-      setPhoneError('Enter a valid US phone number');
+      setError('Passwords do not match.');
       setLoading(false);
       return;
     }
 
     try {
-      // Check if birthday is required
-      if (!date) {
-        setError('Birthday is required.');
-        setLoading(false);
-        return;
-      }
-
-      // Prepare dataToSend: Combine formData with the date picker's 'date' state for birthday
+      // Prepare dataToSend: Only include name, email, password
       const dataToSend = {
-        ...formData,
-        // Format the Date object from 'date' state to 'YYYY-MM-DD' string
-        birthday: format(date, 'yyyy-MM-dd'),
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
       };
 
       // Client-side validation using Zod before sending to API
-      signupSchema.parse(dataToSend); // Validate the combined and formatted data
+      signupSchema.parse(dataToSend);
 
-      await signupMutation.mutateAsync(dataToSend); // Send the validated data
+      await signupMutation.mutateAsync(dataToSend);
     } catch (err) {
       if (err instanceof z.ZodError) {
         setError(err.errors.map((e) => e.message).join('. '));
@@ -250,7 +242,6 @@ export default function SignUpPage() {
               onChange={handlePasswordChange}
               onFocus={() => {
                 setPasswordFocused(true);
-                // Auto-hide re-enter password if there's content in it
                 if (rePassword.length > 0) {
                   setShowRePassword(false);
                 }
@@ -268,7 +259,6 @@ export default function SignUpPage() {
               className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
               onClick={() => {
                 setShowPassword((v) => !v);
-                // Auto-hide re-enter password if there's content in it
                 if (rePassword.length > 0) {
                   setShowRePassword(false);
                 }
@@ -282,8 +272,6 @@ export default function SignUpPage() {
             password={formData.password}
             show={passwordFocused || !!formData.password || passwordTouched}
           />
-
-          {/* Re-enter password field */}
           <div className='relative'>
             <Input
               name='repassword'
@@ -296,7 +284,7 @@ export default function SignUpPage() {
               }}
               onFocus={() => {
                 setRePasswordTouched(true);
-                setShowPassword(false); // Always hide main password and close eye when focusing re-enter
+                setShowPassword(false);
               }}
               required
               className='rounded-md pr-10'
@@ -307,7 +295,6 @@ export default function SignUpPage() {
               className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
               onClick={() => {
                 setShowRePassword((v) => !v);
-                // Always hide main password when toggling re-enter password eye
                 setShowPassword(false);
               }}
               aria-label={showRePassword ? 'Hide password' : 'Show password'}
@@ -326,60 +313,6 @@ export default function SignUpPage() {
               {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
             </div>
           )}
-
-          {/* Birthday Picker - Simple Professional Setup */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type='button'
-                variant='outline'
-                className={cn(
-                  'w-full justify-start text-left font-normal pl-3',
-                  !date && 'text-muted-foreground'
-                )}
-              >
-                <CalendarIcon className='mr-2 h-4 w-4 text-muted-foreground' />
-                {date ? (
-                  format(date, 'MM/dd/yyyy')
-                ) : (
-                  <span className='text-muted-foreground'>
-                    Select your birthday
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align='start' className='p-0 mt-2'>
-              <Calendar
-                selected={date}
-                onSelect={(d) => setDate(d ?? null)}
-                fromYear={1900}
-                toYear={new Date().getFullYear()}
-                initialMonth={date || undefined}
-              />
-            </PopoverContent>
-          </Popover>
-
-          {/* Phone Number Input */}
-          <PhoneInput
-            value={formData.phoneNumber}
-            onChange={(val) => {
-              setFormData((prev) => ({ ...prev, phoneNumber: val }));
-              // No validation here!
-            }}
-            error={phoneError}
-            name='phoneNumber'
-            className='rounded-md'
-            onBlur={() => {
-              if (
-                formData.phoneNumber &&
-                !/^\+1\d{10}$/.test(formData.phoneNumber)
-              ) {
-                setPhoneError('Enter a valid US phone number');
-              } else {
-                setPhoneError(null);
-              }
-            }}
-          />
           <Button
             type='submit'
             disabled={loading}

@@ -16,18 +16,18 @@ import { z } from 'zod'; // For client-side validation
 // Assuming Input and Button components exist
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { PhoneInput } from '@/components/ui/PhoneInput';
+import { ValidatedPhoneInput } from '@/components/ui/ValidatedPhoneInput';
+import { BirthdayPicker } from '@/components/ui/BirthdayPicker';
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { data: session, status } = useSession(); // Get session data
   const [formData, setFormData] = useState({
-    birthday: '',
+    birthday: null as Date | null,
     phoneNumber: '',
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   // tRPC mutation to update user profile
   const updateProfileMutation = api.user.updateProfile.useMutation({
@@ -64,10 +64,9 @@ export default function OnboardingPage() {
     // Populate form if user has existing data (e.g., if they came back to this page)
     const user = session.user as any; // Type assertion for extended session user
     if (user?.birthday) {
-      // Format Date object to YYYY-MM-DD for input type="date"
+      // Convert string to Date object for BirthdayPicker
       const date = new Date(user.birthday);
-      const formattedDate = date.toISOString().split('T')[0];
-      setFormData((prev) => ({ ...prev, birthday: formattedDate }));
+      setFormData((prev) => ({ ...prev, birthday: date }));
     }
     if (user?.phoneNumber) {
       setFormData((prev) => ({
@@ -92,30 +91,18 @@ export default function OnboardingPage() {
     setLoading(true);
     setError(null);
 
-    // Validate phone number before submit
-    if (formData.phoneNumber && !/^\+1\d{10}$/.test(formData.phoneNumber)) {
-      setPhoneError('Enter a valid US phone number');
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Basic client-side validation using Zod (adjust schema as needed for this form)
+      // Basic client-side validation using Zod
       const formSchema = z.object({
-        birthday: z
-          .string()
-          .min(1, 'Birthday is required.')
-          .pipe(z.coerce.date()),
-        phoneNumber: z
-          .string()
-          .min(10, 'Phone number is too short.')
-          .optional()
-          .nullable(),
+        birthday: z.date({
+          required_error: 'Birthday is required.',
+        }),
+        phoneNumber: z.string().optional().nullable(),
       });
       formSchema.parse(formData);
 
       await updateProfileMutation.mutateAsync({
-        birthday: formData.birthday,
+        birthday: formData.birthday!.toISOString().split('T')[0],
         phoneNumber: formData.phoneNumber || null, // Ensure null if empty string
       });
     } catch (err) {
@@ -172,28 +159,20 @@ export default function OnboardingPage() {
             placeholder='Email'
           />
 
-          <Input
-            name='birthday'
-            type='date'
-            placeholder='Birthday'
+          <BirthdayPicker
             value={formData.birthday}
-            onChange={handleChange}
+            onChange={(date) =>
+              setFormData((prev) => ({ ...prev, birthday: date }))
+            }
             required
+            className='rounded-md'
           />
-          <PhoneInput
+          <ValidatedPhoneInput
             value={formData.phoneNumber}
-            onChange={(val) => {
-              setFormData((prev) => ({ ...prev, phoneNumber: val }));
-              // Validate phone number: must be empty or +1 followed by 10 digits
-              if (!val || /^\+1\d{10}$/.test(val)) {
-                setPhoneError(null);
-              } else {
-                setPhoneError('Enter a valid US phone number');
-              }
-            }}
-            error={phoneError}
+            onChange={(val) =>
+              setFormData((prev) => ({ ...prev, phoneNumber: val }))
+            }
             name='phoneNumber'
-            placeholder='+1 (___) ___ ____'
             className='rounded-md'
           />
           <Button type='submit' disabled={loading} className='w-full'>
