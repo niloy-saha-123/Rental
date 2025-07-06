@@ -1,3 +1,7 @@
+/**
+ * @file src/components/features/auth/ValidatedPhoneInput.tsx
+ * @description Phone input component for our app with built-in validation. We use this to collect and validate US phone numbers in onboarding and profile flows.
+ */
 'use client';
 
 import React, { useState } from 'react';
@@ -22,15 +26,15 @@ export const ValidatedPhoneInput: React.FC<ValidatedPhoneInputProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
 
+  // We clear the error as the user types
   const handleChange = (val: string) => {
     onChange(val);
-    // Clear error when user is typing (don't show error during input)
     setError(null);
   };
 
+  // We validate the phone number on blur, but only if the field is not empty
   const handleBlur = () => {
-    // Final validation on blur - only validate if there's content (phone is optional)
-    // PhoneInput formats it as "+1 1234567890" (13 characters total: +1 + space + 10 digits)
+    // Our app expects phone numbers in the format '+1 1234567890' (13 characters)
     if (value && value.length > 0 && value.length < 13) {
       setError('Enter a valid US phone number');
     } else {

@@ -17,10 +17,11 @@ import { format } from 'date-fns'; // Utility for date formatting (e.g., toISOSt
 
 // Importing the GoogleButton component from the icons folder
 import GoogleButton from '@/components/icons/GoogleIcon';
-import { ValidatedPhoneInput } from '@/components/ui/ValidatedPhoneInput';
-import { BirthdayPicker } from '@/components/ui/BirthdayPicker';
-import { PasswordRequirements } from '@/components/ui/PasswordRequirements';
+import { ValidatedPhoneInput } from '@/components/features/auth/ValidatedPhoneInput';
+import { BirthdayPicker } from '@/components/features/auth/BirthdayPicker';
+import { PasswordRequirements } from '@/components/features/auth/PasswordRequirements';
 import { Eye, EyeOff } from 'lucide-react';
+import { PhoneInput } from '@/components/features/auth/PhoneInput';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -166,11 +167,13 @@ export default function SignUpPage() {
     }
 
     try {
-      // Prepare dataToSend: Only include name, email, password
+      // Prepare dataToSend: Include name, email, password, birthday, and phoneNumber
       const dataToSend = {
         name: formData.name,
         email: formData.email,
         password: formData.password,
+        birthday: date ? date.toISOString().split('T')[0] : '',
+        phoneNumber: formData.phoneNumber || null,
       };
 
       // Client-side validation using Zod before sending to API
@@ -204,16 +207,14 @@ export default function SignUpPage() {
 
   return (
     <div className='flex flex-col items-center justify-center min-h-[calc(100vh-128px)] p-4'>
-      <div className='w-full max-w-md bg-white p-8 rounded-lg shadow-md border border-primary-light'>
+      <div className='w-[320px] max-w-[320px] min-w-[320px] bg-white p-8 rounded-lg shadow-md border border-primary-light'>
         <h1 className='text-2xl font-bold text-center mb-6 text-primary font-serif'>
           Sign Up for Gear Up
         </h1>
-
         {error && <p className='text-red-500 text-center mb-4'>{error}</p>}
         {success && (
           <p className='text-green-500 text-center mb-4'>{success}</p>
         )}
-
         <form onSubmit={handleSubmit} className='space-y-4'>
           <Input
             name='name'
@@ -222,7 +223,7 @@ export default function SignUpPage() {
             value={formData.name}
             onChange={handleChange}
             required
-            className='rounded-md'
+            className='rounded-md w-full'
           />
           <Input
             name='email'
@@ -231,7 +232,7 @@ export default function SignUpPage() {
             value={formData.email}
             onChange={handleChange}
             required
-            className='rounded-md'
+            className='rounded-md w-full'
           />
           <div className='relative'>
             <Input
@@ -251,7 +252,7 @@ export default function SignUpPage() {
                 setPasswordTouched(true);
               }}
               required
-              className='rounded-md pr-10'
+              className='rounded-md pr-10 w-full'
             />
             <button
               type='button'
@@ -287,7 +288,7 @@ export default function SignUpPage() {
                 setShowPassword(false);
               }}
               required
-              className='rounded-md pr-10'
+              className='rounded-md pr-10 w-full'
             />
             <button
               type='button'
@@ -321,16 +322,13 @@ export default function SignUpPage() {
             {loading ? 'Signing up...' : 'Sign Up'}
           </Button>
         </form>
-
         <div className='my-6 text-center text-gray-500'>OR</div>
-
         <GoogleButton
           type='signup'
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className='rounded-full overflow-hidden'
+          className='rounded-full overflow-hidden w-full font-sans font-normal text-base'
         />
-
         <p className='mt-4 text-center text-sm text-gray-600'>
           Already have an account?{' '}
           <a href='/login' className='text-primary hover:underline'>

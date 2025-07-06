@@ -10,6 +10,7 @@
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 // Using Input and Button components from components/ui (now possibly Shadcn's versions)
 import { Button } from '@/components/ui/Button';
@@ -26,10 +27,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  // Email format validation
+  const emailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleCredentialsSignIn = async () => {
     setLoading(true);
     setError(null);
+    // Prevent login if email format is invalid
+    if (!emailFormatValid) {
+      setError('Invalid email address');
+      setLoading(false);
+      return;
+    }
     try {
       const result = await signIn('credentials', {
         redirect: false,
@@ -38,7 +50,14 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError(result.error);
+        // Show specific error for wrong email or password
+        if (result.error.toLowerCase().includes('email')) {
+          setError('Email does not exist');
+        } else if (result.error.toLowerCase().includes('password')) {
+          setError('Incorrect password');
+        } else {
+          setError(result.error);
+        }
       } else if (result?.ok) {
         router.push(callbackUrl);
       }
@@ -67,51 +86,77 @@ export default function LoginPage() {
 
   return (
     <div className='flex flex-col items-center justify-center min-h-[calc(100vh-128px)] p-4'>
-      <div className='w-full max-w-md bg-white p-8 rounded-lg shadow-md border border-primary-light'>
-        {' '}
-        {/* Added border */}
+      <div className='w-[320px] max-w-[320px] min-w-[320px] min-h-[500px] bg-white p-8 rounded-lg shadow-md border border-primary-light'>
         <h1 className='text-2xl font-bold text-center mb-6 text-primary font-serif'>
-          {' '}
-          {/* Added text color & font-serif */}
-          Login to Gear Up
+          Log In to Gear Up
         </h1>
         {error && <p className='text-red-500 text-center mb-4'>{error}</p>}
-        <div className='space-y-4'>
+        <form
+          className='space-y-4'
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleCredentialsSignIn();
+          }}
+        >
           <Input
             type='email'
             placeholder='Email'
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className='rounded-md' // Ensure input rounding
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailTouched(true);
+              if (error && error.toLowerCase().includes('email'))
+                setError(null);
+            }}
+            onBlur={() => setEmailTouched(true)}
+            className='rounded-md w-full'
           />
-          <Input
-            type='password'
-            placeholder='Password'
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className='rounded-md' // Ensure input rounding
-          />
+          {/* Show instant email format error if touched and invalid */}
+          {emailTouched && email && !emailFormatValid && (
+            <div className='text-xs text-red-500 mt-1'>
+              Invalid email address
+            </div>
+          )}
+          <div className='relative'>
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              placeholder='Password'
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className='rounded-md w-full pr-10'
+            />
+            <button
+              type='button'
+              tabIndex={-1}
+              className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
           <Button
-            onClick={handleCredentialsSignIn}
-            disabled={loading}
-            className='w-full bg-primary hover:bg-primary-dark rounded-md' // Updated button colors & rounding
+            type='submit'
+            disabled={Boolean(
+              loading || (emailTouched && email && !emailFormatValid)
+            )}
+            className='w-full bg-primary hover:bg-primary-dark rounded-md'
           >
             {loading ? 'Logging in...' : 'Login with Email'}
           </Button>
-        </div>
+        </form>
         <div className='my-6 text-center text-gray-500'>OR</div>
-        {/* Updated: Use the custom GoogleButton component directly */}
         <GoogleButton
-          type='signin' // Specify 'signin' type for the button
-          onClick={handleGoogleSignIn} // Attach the Google sign-in handler
-          disabled={loading} // Disable button during loading
-          className='rounded-full overflow-hidden' // Ensure button itself is pill-shaped if SVG is pill-shaped
+          type='signin'
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className='rounded-full overflow-hidden w-full font-sans font-normal text-base'
         />
         <p className='text-center text-sm mt-6'>
           Don&apos;t have an account?{' '}
           <button
             onClick={() => router.push('/signup')}
-            className='text-primary hover:underline font-medium' // Updated link color
+            className='text-primary hover:underline font-medium'
           >
             Sign Up
           </button>

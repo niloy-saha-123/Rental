@@ -16,8 +16,8 @@ import { z } from 'zod'; // For client-side validation
 // Assuming Input and Button components exist
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { ValidatedPhoneInput } from '@/components/ui/ValidatedPhoneInput';
-import { BirthdayPicker } from '@/components/ui/BirthdayPicker';
+import { ValidatedPhoneInput } from '@/components/features/auth/ValidatedPhoneInput';
+import { BirthdayPicker } from '@/components/features/auth/BirthdayPicker';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -27,6 +27,7 @@ export default function OnboardingPage() {
     phoneNumber: '',
   });
   const [error, setError] = useState<string | null>(null);
+  const [birthdayError, setBirthdayError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   // tRPC mutation to update user profile
@@ -90,6 +91,25 @@ export default function OnboardingPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setBirthdayError(null);
+
+    // Birthday age validation
+    const today = new Date();
+    const minAgeDate = new Date(
+      today.getFullYear() - 16,
+      today.getMonth(),
+      today.getDate()
+    );
+    if (!formData.birthday) {
+      setBirthdayError('Birthday is required.');
+      setLoading(false);
+      return;
+    }
+    if (formData.birthday > minAgeDate) {
+      setBirthdayError('You must be at least 16 years old.');
+      setLoading(false);
+      return;
+    }
 
     try {
       // Basic client-side validation using Zod
@@ -161,11 +181,24 @@ export default function OnboardingPage() {
 
           <BirthdayPicker
             value={formData.birthday}
-            onChange={(date) =>
-              setFormData((prev) => ({ ...prev, birthday: date }))
-            }
+            onChange={(date) => {
+              setFormData((prev) => ({ ...prev, birthday: date }));
+              // Validate on change
+              const today = new Date();
+              const minAgeDate = new Date(
+                today.getFullYear() - 16,
+                today.getMonth(),
+                today.getDate()
+              );
+              if (date && date > minAgeDate) {
+                setBirthdayError('You must be at least 16 years old.');
+              } else {
+                setBirthdayError(null);
+              }
+            }}
             required
             className='rounded-md'
+            error={birthdayError}
           />
           <ValidatedPhoneInput
             value={formData.phoneNumber}

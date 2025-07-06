@@ -32,8 +32,8 @@ const GoogleButton = ({
     <button
       onClick={onClick}
       disabled={disabled}
-      // Apply Tailwind CSS for full width, basic styling, and merge any custom classes.
-      className={`w-full h-10 flex items-center justify-center relative overflow-hidden rounded-full transition-opacity duration-300
+      // Remove overflow-hidden to prevent SVG border from being clipped
+      className={`w-full h-10 flex items-center justify-center relative rounded-full transition-opacity duration-300
                   ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}
                   ${className || ''}`}
       {...props} // Pass any additional button attributes
@@ -42,8 +42,8 @@ const GoogleButton = ({
         src={svgSrc}
         alt={`Sign ${type} with Google`}
         fill
-        // Ensure the image covers the button area without distortion.
-        className='object-cover pointer-events-none'
+        // Use object-contain to ensure the full SVG (including border) is visible
+        className='object-contain pointer-events-none'
       />
       {/* Optional: Add text overlay if needed, but the SVG already contains text.
           If the SVG contains text, this is mostly for screen readers or fallback. */}

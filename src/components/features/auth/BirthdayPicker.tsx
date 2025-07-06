@@ -1,11 +1,15 @@
+/**
+ * @file src/components/features/auth/BirthdayPicker.tsx
+ * @description Birthday picker component for our app, allowing users to select their date of birth. We use this in onboarding and profile flows to collect and validate user age.
+ */
 'use client';
 
 import React, { useState } from 'react';
 import { format, isAfter } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { Button } from './Button';
-import { Calendar } from './Calendar';
-import { Popover, PopoverContent, PopoverTrigger } from './Popover';
+import { Button } from '../../ui/Button';
+import { Calendar } from '../../ui/Calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/Popover';
 import { cn } from '@/lib/utils';
 
 interface BirthdayPickerProps {
@@ -32,13 +36,8 @@ export const BirthdayPicker: React.FC<BirthdayPickerProps> = ({
   );
   const [showTooltip, setShowTooltip] = useState(false);
 
-  // Handler to prevent selecting disabled dates and show tooltip
+  // Handler to allow selecting any date
   const handleSelect = (date: Date | undefined) => {
-    if (date && isAfter(date, minAgeDate)) {
-      setShowTooltip(true);
-      setTimeout(() => setShowTooltip(false), 2000);
-      return;
-    }
     onChange(date ?? null);
   };
 
@@ -73,15 +72,7 @@ export const BirthdayPicker: React.FC<BirthdayPickerProps> = ({
             fromYear={1900}
             toYear={today.getFullYear()}
             initialMonth={today}
-            modifiers={{
-              disabled: [{ after: minAgeDate }],
-            }}
           />
-          {showTooltip && (
-            <div className='absolute left-1/2 -translate-x-1/2 mt-2 bg-red-500 text-white text-xs rounded px-2 py-1 shadow z-50'>
-              You must be at least 16 years old to sign up.
-            </div>
-          )}
         </PopoverContent>
       </Popover>
       {error && <div className='text-xs text-red-500 mt-1'>{error}</div>}

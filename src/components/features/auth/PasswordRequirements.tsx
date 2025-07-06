@@ -1,3 +1,7 @@
+/**
+ * @file src/components/features/auth/PasswordRequirements.tsx
+ * @description Password requirements checklist for our app. We use this to show users what is required for a valid password during signup or password change.
+ */
 import React from 'react';
 
 interface PasswordRequirementsProps {
@@ -5,6 +9,7 @@ interface PasswordRequirementsProps {
   show: boolean;
 }
 
+// We define the requirements for a valid password in our app
 const requirements = [
   {
     label: 'Enter at least 8 characters',

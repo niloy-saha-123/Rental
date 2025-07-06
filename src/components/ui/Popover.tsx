@@ -1,3 +1,7 @@
+/**
+ * @file src/components/ui/Popover.tsx
+ * @description Popover component for our app, built on Radix UI. We use this to display floating content such as dropdowns, calendars, and tooltips in a consistent way.
+ */
 'use client';
 
 import * as React from 'react';
