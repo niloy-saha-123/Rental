@@ -10,46 +10,13 @@
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 // Using Input and Button components from components/ui (now possibly Shadcn's versions)
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-
-// Define the Google SVG icon directly here (or import from a central icon file)
-const GoogleIcon = () => (
-  <svg
-    width='24'
-    height='24'
-    viewBox='0 0 24 24'
-    fill='none'
-    xmlns='http://www.w3.org/2000/svg'
-  >
-    <path
-      d='M12.0003 4.40997C14.0893 4.40997 15.7763 5.16997 17.0503 6.39997L20.5003 2.95997C18.3973 0.949973 15.4853 0 12.0003 0C7.27933 0 3.19933 2.61997 1.02033 6.60997L5.00033 9.73997C5.90333 7.02997 8.71833 4.40997 12.0003 4.40997Z'
-      fill='#EA4335'
-    />
-    <path
-      d='M23.9999 12.16H23.5189L23.4909 12.443L23.9999 12.16Z'
-      fill='#4285F4'
-    />
-    <path
-      d='M23.9999 12C23.9999 11.7371 23.9806 11.478 23.9559 11.221L12.0001 11.219L12.0001 15.986L18.7311 15.986C18.423 17.9622 17.2144 19.5772 15.5392 20.672L19.5692 23.792C21.8492 21.672 23.9999 18.232 23.9999 12Z'
-      fill='#4285F4'
-    />
-    <path
-      d='M12.0003 24.0001C15.4853 24.0001 18.3973 23.0501 20.5003 21.0401L17.0503 17.5901C15.7763 18.8201 14.0893 19.5801 12.0003 19.5801C8.71833 19.5801 5.90333 16.9601 5.00033 14.2501L1.02033 17.3801C3.19933 21.3701 7.27933 24.0001 12.0003 24.0001Z'
-      fill='#34A853'
-    />
-    <path
-      d='M5.00033 14.25L1.02033 17.38C1.40133 18.107 1.83633 18.805 2.30833 19.467L6.40133 16.337C6.18333 15.698 6.00033 14.992 5.90333 14.25H5.00033Z'
-      fill='#FBBD00'
-    />
-    <path
-      d='M23.9559 11.221H23.9999V12H23.5189L23.4909 11.221H23.9559Z'
-      fill='#FBBD00'
-    />
-  </svg>
-);
+// Importing the GoogleButton component from the icons folder
+import GoogleButton from '@/components/icons/GoogleIcon'; // Changed from GoogleIcon to GoogleButton
 
 export default function LoginPage() {
   const router = useRouter();
@@ -60,10 +27,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  // Email format validation
+  const emailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleCredentialsSignIn = async () => {
     setLoading(true);
     setError(null);
+    // Prevent login if email format is invalid
+    if (!emailFormatValid) {
+      setError('Invalid email address');
+      setLoading(false);
+      return;
+    }
     try {
       const result = await signIn('credentials', {
         redirect: false,
@@ -72,7 +50,14 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError(result.error);
+        // Show specific error for wrong email or password
+        if (result.error.toLowerCase().includes('email')) {
+          setError('Email does not exist');
+        } else if (result.error.toLowerCase().includes('password')) {
+          setError('Incorrect password');
+        } else {
+          setError(result.error);
+        }
       } else if (result?.ok) {
         router.push(callbackUrl);
       }
@@ -101,53 +86,77 @@ export default function LoginPage() {
 
   return (
     <div className='flex flex-col items-center justify-center min-h-[calc(100vh-128px)] p-4'>
-      <div className='w-full max-w-md bg-white p-8 rounded-lg shadow-md border border-gray-200'>
-        <h1 className='text-2xl font-bold text-center mb-6 text-my-primary font-serif'>
-          Login to Gear Up
+      <div className='w-[320px] max-w-[320px] min-w-[320px] min-h-[500px] bg-white p-8 rounded-lg shadow-md border border-primary-light'>
+        <h1 className='text-2xl font-bold text-center mb-6 text-primary font-serif'>
+          Log In to Gear Up
         </h1>
         {error && <p className='text-red-500 text-center mb-4'>{error}</p>}
-        <div className='space-y-4'>
+        <form
+          className='space-y-4'
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleCredentialsSignIn();
+          }}
+        >
           <Input
             type='email'
             placeholder='Email'
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className='rounded-md'
-            suppressHydrationWarning={true}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailTouched(true);
+              if (error && error.toLowerCase().includes('email'))
+                setError(null);
+            }}
+            onBlur={() => setEmailTouched(true)}
+            className='rounded-md w-full'
           />
-          <Input
-            type='password'
-            placeholder='Password'
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className='rounded-md'
-            suppressHydrationWarning={true}
-          />
+          {/* Show instant email format error if touched and invalid */}
+          {emailTouched && email && !emailFormatValid && (
+            <div className='text-xs text-red-500 mt-1'>
+              Invalid email address
+            </div>
+          )}
+          <div className='relative'>
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              placeholder='Password'
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className='rounded-md w-full pr-10'
+            />
+            <button
+              type='button'
+              tabIndex={-1}
+              className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
           <Button
-            onClick={handleCredentialsSignIn}
-            disabled={loading}
-            className='w-full bg-my-primary hover:bg-my-primary-dark rounded-md text-white'
-            suppressHydrationWarning={true}
+            type='submit'
+            disabled={Boolean(
+              loading || (emailTouched && email && !emailFormatValid)
+            )}
+            className='w-full bg-primary hover:bg-primary-dark rounded-md'
           >
             {loading ? 'Logging in...' : 'Login with Email'}
           </Button>
-        </div>
+        </form>
         <div className='my-6 text-center text-gray-500'>OR</div>
-        <Button
+        <GoogleButton
+          type='signin'
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className='w-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-md flex items-center justify-center gap-2'
-          suppressHydrationWarning={true}
-        >
-          <GoogleIcon />
-          {loading ? 'Signing in...' : 'Sign in with Google'}
-        </Button>
+          className='rounded-full overflow-hidden w-full font-sans font-normal text-base'
+        />
         <p className='text-center text-sm mt-6'>
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <button
             onClick={() => router.push('/signup')}
-            className='text-my-primary hover:underline font-medium'
-            suppressHydrationWarning={true}
+            className='text-primary hover:underline font-medium'
           >
             Sign Up
           </button>

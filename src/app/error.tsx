@@ -30,7 +30,7 @@ export default function Error({
         Something went wrong!
       </h2>
       <p className='text-gray-700 mb-6'>
-        We're sorry, but an unexpected error occurred. Please try again.
+        We&apos;re sorry, but an unexpected error occurred. Please try again.
       </p>
       <button
         className='px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300'

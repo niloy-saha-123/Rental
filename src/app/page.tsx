@@ -1,7 +1,7 @@
 // src/app/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React /*, { useState }*/ from 'react'; // 'useState' commented for now, might need later
 import SearchBar from '@/components/common/Searchbar'; // Import your new SearchBar component (adjusted path)
 
 export default function Home() {
