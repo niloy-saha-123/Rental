@@ -10,7 +10,7 @@
 import type { Metadata } from 'next'; // Imports Metadata type for SEO.
 import { Inter, Playfair_Display } from 'next/font/google'; // Import fonts, including Playfair_Display.
 import '@/app/global.css'; // Imports global CSS styles using absolute path.
-import Header from '@/components/layout/Header'; // Imports Header component using absolute path.
+import ConditionalHeader from '@/components/layout/ConditionalHeader'; // Imports conditional header component.
 
 // Import the Providers Client Component
 import Providers from './providers'; // Imports our client-side Providers wrapper component.
@@ -49,7 +49,7 @@ export default function RootLayout({
         {/* This establishes the client-server boundary correctly for context providers */}
         <Providers>
           {/* Wraps the entire application with client-side context providers. */}
-          <Header /> {/* Header component, now active. */}
+          <ConditionalHeader /> {/* Conditional header component, hidden on lend page. */}
           <main>{children}</main>
           {/* Main content area, renders page.tsx content. */}
           <footer className='p-4 bg-gray-100 text-center text-gray-700'>
