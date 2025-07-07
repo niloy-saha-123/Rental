@@ -16,24 +16,27 @@ import { z } from 'zod'; // For client-side validation
 // Assuming Input and Button components exist
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { ValidatedPhoneInput } from '@/components/features/auth/ValidatedPhoneInput';
+import { BirthdayPicker } from '@/components/features/auth/BirthdayPicker';
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { data: session, status } = useSession(); // Get session data
   const [formData, setFormData] = useState({
-    birthday: '',
+    birthday: null as Date | null,
     phoneNumber: '',
   });
   const [error, setError] = useState<string | null>(null);
+  const [birthdayError, setBirthdayError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   // tRPC mutation to update user profile
   const updateProfileMutation = api.user.updateProfile.useMutation({
-    onSuccess: (data) => {
+    onSuccess: () => {
       // If profile updated successfully, redirect to homepage
       router.push('/');
     },
-    onError: (err) => {
+    onError: (err: any) => {
       console.error('Profile Update Error:', err);
       if (err.data?.zodError) {
         setError(
@@ -60,16 +63,16 @@ export default function OnboardingPage() {
     }
 
     // Populate form if user has existing data (e.g., if they came back to this page)
-    if (session.user.birthday) {
-      // Format Date object to YYYY-MM-DD for input type="date"
-      const date = new Date(session.user.birthday);
-      const formattedDate = date.toISOString().split('T')[0];
-      setFormData((prev) => ({ ...prev, birthday: formattedDate }));
+    const user = session.user as any; // Type assertion for extended session user
+    if (user?.birthday) {
+      // Convert string to Date object for BirthdayPicker
+      const date = new Date(user.birthday);
+      setFormData((prev) => ({ ...prev, birthday: date }));
     }
-    if (session.user.phoneNumber) {
+    if (user?.phoneNumber) {
       setFormData((prev) => ({
         ...prev,
-        phoneNumber: session.user.phoneNumber as string,
+        phoneNumber: user.phoneNumber as string,
       }));
     }
 
@@ -88,24 +91,38 @@ export default function OnboardingPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setBirthdayError(null);
+
+    // Birthday age validation
+    const today = new Date();
+    const minAgeDate = new Date(
+      today.getFullYear() - 16,
+      today.getMonth(),
+      today.getDate()
+    );
+    if (!formData.birthday) {
+      setBirthdayError('Birthday is required.');
+      setLoading(false);
+      return;
+    }
+    if (formData.birthday > minAgeDate) {
+      setBirthdayError('You must be at least 16 years old.');
+      setLoading(false);
+      return;
+    }
 
     try {
-      // Basic client-side validation using Zod (adjust schema as needed for this form)
+      // Basic client-side validation using Zod
       const formSchema = z.object({
-        birthday: z
-          .string()
-          .min(1, 'Birthday is required.')
-          .pipe(z.coerce.date()),
-        phoneNumber: z
-          .string()
-          .min(10, 'Phone number is too short.')
-          .optional()
-          .nullable(),
+        birthday: z.date({
+          required_error: 'Birthday is required.',
+        }),
+        phoneNumber: z.string().optional().nullable(),
       });
       formSchema.parse(formData);
 
       await updateProfileMutation.mutateAsync({
-        birthday: formData.birthday,
+        birthday: formData.birthday!.toISOString().split('T')[0],
         phoneNumber: formData.phoneNumber || null, // Ensure null if empty string
       });
     } catch (err) {
@@ -162,20 +179,34 @@ export default function OnboardingPage() {
             placeholder='Email'
           />
 
-          <Input
-            name='birthday'
-            type='date'
-            placeholder='Birthday'
+          <BirthdayPicker
             value={formData.birthday}
-            onChange={handleChange}
+            onChange={(date) => {
+              setFormData((prev) => ({ ...prev, birthday: date }));
+              // Validate on change
+              const today = new Date();
+              const minAgeDate = new Date(
+                today.getFullYear() - 16,
+                today.getMonth(),
+                today.getDate()
+              );
+              if (date && date > minAgeDate) {
+                setBirthdayError('You must be at least 16 years old.');
+              } else {
+                setBirthdayError(null);
+              }
+            }}
             required
+            className='rounded-md'
+            error={birthdayError}
           />
-          <Input
-            name='phoneNumber'
-            type='tel'
-            placeholder='Phone Number (Optional)'
+          <ValidatedPhoneInput
             value={formData.phoneNumber}
-            onChange={handleChange}
+            onChange={(val) =>
+              setFormData((prev) => ({ ...prev, phoneNumber: val }))
+            }
+            name='phoneNumber'
+            className='rounded-md'
           />
           <Button type='submit' disabled={loading} className='w-full'>
             {loading ? 'Saving...' : 'Complete Profile'}

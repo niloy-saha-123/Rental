@@ -1,7 +1,6 @@
 /**
  * @file src/components/ui/Popover.tsx
- * @description A reusable React Popover component from Shadcn UI, built on Radix UI.
- * It provides a floating content container that can be triggered by various elements.
+ * @description Popover component for our app, built on Radix UI. We use this to display floating content such as dropdowns, calendars, and tooltips in a consistent way.
  */
 'use client';
 

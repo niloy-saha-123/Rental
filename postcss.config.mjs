@@ -1,9 +1,9 @@
 // postcss.config.mjs
-// This file tells PostCSS to use the Tailwind CSS and Autoprefixer plugins.
+// This file tells PostCSS to use the Tailwind CSS and Autoprefixer plugins for Tailwind CSS v3.
 
 export default {
   plugins: {
-    tailwindcss: {}, // This line loads the Tailwind CSS PostCSS plugin
-    autoprefixer: {}, // This line adds vendor prefixes for broader browser compatibility
+    tailwindcss: {}, // For Tailwind CSS v3, use 'tailwindcss' directly.
+    autoprefixer: {}, // Autoprefixer is typically used alongside Tailwind CSS.
   },
 };

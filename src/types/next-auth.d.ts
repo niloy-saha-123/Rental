@@ -5,9 +5,6 @@
  * to the session object that is accessible on the client-side (`useSession`) and within JWTs.
  */
 
-import NextAuth from 'next-auth';
-import { JWT } from 'next-auth/jwt';
-
 declare module 'next-auth' {
   /**
    * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
@@ -22,7 +19,7 @@ declare module 'next-auth' {
       // NEW: Custom properties from our User model
       birthday?: Date | null;
       phoneNumber?: string | null;
-    } & DefaultSession['user'];
+    } & DefaultSession['user']; // Merges with the default session user properties.
   }
 
   /**

@@ -5,8 +5,6 @@
  * It works in conjunction with NextAuth.js's CredentialsProvider for user login.
  */
 
-// Zod for input validation based on the schema defined in src/lib/validators.
-import { z } from 'zod';
 // Hash function from bcryptjs for securely storing passwords.
 import { hash } from 'bcryptjs';
 // Import Prisma's User type from @prisma/client for explicit typing.

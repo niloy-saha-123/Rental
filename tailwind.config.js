@@ -1,16 +1,29 @@
-// tailwind.config.js
+/**
+ * @file tailwind.config.js
+ * @description This file serves as the central configuration for Tailwind CSS in your project.
+ * It's where you customize Tailwind's default behavior, extend its theme with your branding (colors, fonts,
+ * spacing, etc.), and define plugins. This configuration is crucial for ensuring that Tailwind generates
+ * the correct utility classes and styles based on your project's specific design system.
+ */
 const { fontFamily } = require('tailwindcss/defaultTheme'); // Imports default theme to extend fonts.
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  // These paths tell Tailwind CSS where to look for your classes
+  darkMode: ['class'],
   content: [
-    './pages/**/*.{js,ts,jsx,tsx,mdx}', // If you use Pages Router
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}', // For App Router
     './src/**/*.{js,ts,jsx,tsx,mdx}', // Ensure src directory is included (from main's content)
   ],
   theme: {
+    container: {
+      center: true,
+      padding: '2rem',
+      screens: {
+        '2xl': '1400px',
+      },
+    },
     extend: {
       // Background images (from main)
       backgroundImage: {
@@ -28,7 +41,7 @@ module.exports = {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: 'hsl(var(--primary))', // This will now point to your purple color defined below
+          DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
         },
         secondary: {
@@ -59,7 +72,8 @@ module.exports = {
         // These are the direct HSL values for your purple shades.
         // Make sure these match the --primary HSL values in globals.css for consistency if desired.
         // For now, these direct hex codes will be used.
-        'my-primary': { // Renamed from 'primary' to 'my-primary' to avoid conflict with Shadcn's primary
+        'my-primary': {
+          // Renamed from 'primary' to 'my-primary' to avoid conflict with Shadcn's primary
           DEFAULT: '#766be0', // Your main purple/indigo color
           light: '#9e99eb', // A lighter shade for backgrounds or subtle accents
           dark: '#5c52b3', // A darker shade for hover states or deeper accents
@@ -67,11 +81,23 @@ module.exports = {
       },
       // Custom border radius values for more consistent rounding (from main).
       borderRadius: {
-        lg: 'var(--radius)', // Uses the --radius CSS variable from globals.css
+        lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
-        xl: '1rem', // Example: more rounded corners
-        // Ensure standard Tailwind classes like 'rounded-md' still work
+      },
+      keyframes: {
+        'accordion-down': {
+          from: { height: 0 },
+          to: { height: 'var(--radix-accordion-content-height)' },
+        },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: 0 },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
       },
       // Custom font families integrated with Tailwind's defaults via CSS variables (from your branch).
       fontFamily: {
@@ -80,5 +106,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [require('tailwindcss-animate')],
 };
