@@ -13,8 +13,8 @@ module.exports = {
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}', // For App Router
+    './src/**/*.{js,ts,jsx,tsx,mdx}', // Ensure src directory is included (from main's content)
   ],
   theme: {
     container: {
@@ -25,6 +25,15 @@ module.exports = {
       },
     },
     extend: {
+      // Background images (from main)
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic':
+          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      },
+      // --- Shadcn UI Color & Border Configuration (from main) ---
+      // This maps Tailwind's color names to the CSS variables defined in globals.css.
+      // This is crucial for Shadcn UI components to be styled correctly.
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
@@ -59,7 +68,18 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        // --- Your Custom Purple Theme Colors (integrated with main's color structure) ---
+        // These are the direct HSL values for your purple shades.
+        // Make sure these match the --primary HSL values in globals.css for consistency if desired.
+        // For now, these direct hex codes will be used.
+        'my-primary': {
+          // Renamed from 'primary' to 'my-primary' to avoid conflict with Shadcn's primary
+          DEFAULT: '#766be0', // Your main purple/indigo color
+          light: '#9e99eb', // A lighter shade for backgrounds or subtle accents
+          dark: '#5c52b3', // A darker shade for hover states or deeper accents
+        },
       },
+      // Custom border radius values for more consistent rounding (from main).
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
@@ -78,6 +98,11 @@ module.exports = {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+      },
+      // Custom font families integrated with Tailwind's defaults via CSS variables (from your branch).
+      fontFamily: {
+        sans: ['var(--font-inter)', ...fontFamily.sans],
+        serif: ['var(--font-playfair)', ...fontFamily.serif],
       },
     },
   },

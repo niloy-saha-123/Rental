@@ -70,11 +70,21 @@ export interface ButtonProps
   // Inherits types for the 'variant' and 'size' props from cva.
   asChild?: boolean; // Optional prop from Radix UI's Slot; if true, the component's child is rendered as the button.
   icon?: React.ReactNode; // Optional prop to render an icon (any React element) inside the button.
+  suppressHydrationWarning?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>( // Uses React.forwardRef to allow parent components to pass a ref to the underlying DOM element.
   (
-    { className, variant, size, asChild = false, icon, children, ...props },
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      icon,
+      children,
+      suppressHydrationWarning,
+      ...props
+    },
     ref
   ) => {
     // Determines which component to render: Slot (if asChild is true) or a native 'button' element.
@@ -84,6 +94,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>( // Uses React.f
       <Comp
         className={cn(buttonVariants({ variant, size, className }))} // Combines base button styles with variant/size styles and any custom classes.
         ref={ref} // Passes the ref down to the rendered DOM element.
+        suppressHydrationWarning={suppressHydrationWarning}
         {...props} // Spreads any other HTML attributes passed to the Button component.
       >
         {icon && <span className='mr-2'>{icon}</span>}{' '}
